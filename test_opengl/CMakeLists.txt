@@ -5,7 +5,7 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 # glfw和glew的头文件目录，这是我的路径，你可以换成你自己的
 INCLUDE_DIRECTORIES(
-  include
+  ${CMAKE_CURRENT_LIST_DIR}/../includes
 )
 
 AUX_SOURCE_DIRECTORY(src DIR_SRCS)

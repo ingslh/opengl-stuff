@@ -4,7 +4,7 @@ project(opengl_transform)
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 include_directories(
-    ${CMAKE_CURRENT_LIST_DIR}/include
+    ${CMAKE_CURRENT_LIST_DIR}/../includes
 )
 
 AUX_SOURCE_DIRECTORY(src DIR_SRCS)
