@@ -9,42 +9,43 @@ struct Material {
     float shininess;//影响镜面高光的散射/半径
 };
 
-vec3 res = vec3(texture(material.diffuse, TexCoords))
+vec3 res = vec3(texture(material.diffuse, TexCoords))//输入
 ```
 
 2. 三种投光物光照形式（DirLight、PointLight、SpotLight）在片段着色器中的表现形式，及主程序中的输入形式；
 ```c
-//平行光
+//定向光
 struct DirLight {
-    vec3 direction;
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
+    //不需要位置信息
+    vec3 direction;//在计算时需要对direction取反，
+    vec3 ambient;//环境光照
+    vec3 diffuse;//漫反射光照
+    vec3 specular;//镜面光照
 };
 //点射光
 struct PointLight {
-    vec3 position;
-    
-    float constant;
-    float linear;
-    float quadratic;
+    vec3 position;//点光源位置
+    //没有方向信息
+    float constant;//衰减：常数项
+    float linear;//衰减：一次项
+    float quadratic;//衰减：二次项
 	
-    vec3 ambient;
+    vec3 ambient;//同定向光，三种光照向量
     vec3 diffuse;
     vec3 specular;
 };
 //聚光
 struct SpotLight {
-    vec3 position;
-    vec3 direction;
-    float cutOff;
-    float outerCutOff;
+    vec3 position;//光源位置
+    vec3 direction;//光线方向向量
+    float cutOff;//内切广角，代表聚光半径
+    float outerCutOff;//外切光角，内切光到外切光之间会逐渐衰减
   
-    float constant;
+    float constant;//衰减项，同点射光
     float linear;
     float quadratic;
   
-    vec3 ambient;
+    vec3 ambient;//同定向光，三种光照向量
     vec3 diffuse;
     vec3 specular;       
 };
