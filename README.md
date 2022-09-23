@@ -8,8 +8,6 @@ struct Material {
     sampler2D specular;//表面镜像高光的颜色
     float shininess;//反光度，代表反射光的能力，反射光的能力越强，散射得越少，高光点就会越小
 };
-
-vec3 res = vec3(texture(material.diffuse, TexCoords))//输入
 ```
 
 2. 三种投光物光照形式（DirLight、PointLight、SpotLight）在片段着色器中的表现形式，及主程序中的输入形式；
@@ -120,3 +118,36 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 最终将三种光类型计算的结果求和，得到光照组合后的最终结果。
 
 4. 顶点着色器中的坐标计算，及主程序中的输入定义
+```GLSL
+#version 330 core
+layout (location = 0) in vec3 aPos; //通过VAO/VBO配置
+layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 aTexCoords;
+
+out vec3 FragPos;
+out vec3 Normal;
+out vec2 TexCoords;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+void main()
+{
+    FragPos = vec3(model * vec4(aPos, 1.0));
+    Normal = mat3(transpose(inverse(model))) * aNormal;  
+    TexCoords = aTexCoords;
+    
+    gl_Position = projection * view * vec4(FragPos, 1.0);
+}
+```
+
+顶点数据的存储形式为(节选)：
+```GLSL
+float vertices[] = {
+        // positions          // normals           // texture coords
+	...
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+	...
+	};	
+```
