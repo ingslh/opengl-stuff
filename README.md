@@ -6,7 +6,7 @@
 struct Material {
     sampler2D diffuse;//漫反射光照下表面的颜色
     sampler2D specular;//表面镜像高光的颜色
-    float shininess;//影响镜面高光的散射/半径
+    float shininess;//反光度，代表反射光的能力，反射光的能力越强，散射得越少，高光点就会越小
 };
 
 vec3 res = vec3(texture(material.diffuse, TexCoords))//输入
@@ -53,20 +53,70 @@ struct SpotLight {
 
 3. 三种光照在片段着色器中的计算形式
 ```c
+//定向光计算
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 {
-    vec3 lightDir = normalize(-light.direction);
+    vec3 lightDir = normalize(-light.direction);//需要一个从片段至光源的光线方向，而direction的物理性质为从光源到片段的方向（全局方向），因此需要取反
     // diffuse shading
-    float diff = max(dot(normal, lightDir), 0.0);
+    float diff = max(dot(normal, lightDir), 0.0);//避免夹角大于90°时，点乘为负，因此需要做输出限制
     // specular shading
     vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);//视线方向与反射方向的点乘（并确保它不是负值），然后取它的反光度的次幂
     // combine results
     vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoords));
     vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoords));
     vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
     return (ambient + diffuse + specular);
 }
+
+//点射光计算，与定向光的差异是需要计算光的方向，以及考虑衰减（attenuation）
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
+{
+    vec3 lightDir = normalize(light.position - fragPos);//计算光的方向，片段指向光源
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+    // specular shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    // attenuation 
+    float distance = length(light.position - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));//通过衰减公式，计算衰减attenuation    
+    // combine results
+    vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoords));
+    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoords));
+    vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
+    ambient *= attenuation;//各光分量乘以同样的衰减系数
+    diffuse *= attenuation;
+    specular *= attenuation;
+    return (ambient + diffuse + specular);
+}
+
+//聚光计算，与点射光的差异主要是需要通过内外光锥完成光边缘的软化/平滑
+vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
+{
+    vec3 lightDir = normalize(light.position - fragPos);
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+    // specular shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    // attenuation
+    float distance = length(light.position - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
+    // spotlight intensity
+    float theta = dot(lightDir, normalize(-light.direction)); //LightDir向量和SpotDir向量之间的夹角余弦,即光显示的范围
+    float epsilon = light.cutOff - light.outerCutOff;//内圆锥与外圆锥之间的余弦差
+    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);//通过公式计算聚光的强度
+    // combine results
+    vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoords));
+    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, TexCoords));
+    vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));
+    ambient *= attenuation * intensity;//各光分量乘以衰减系数乘以聚光平滑系数
+    diffuse *= attenuation * intensity;
+    specular *= attenuation * intensity;
+    return (ambient + diffuse + specular);
+}
 ```
+最终将三种光类型计算的结果求和，得到光照组合后的最终结果。
 
 4. 顶点着色器中的坐标计算，及主程序中的输入定义
