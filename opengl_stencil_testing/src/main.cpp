@@ -168,7 +168,7 @@ int main()
     // load textures
     // -------------
     unsigned int cubeTexture = loadTexture("../../resources/marble.jpeg");
-    unsigned int floorTexture = loadTexture("../../resources/textures/metal.png");
+    unsigned int floorTexture = loadTexture("../../resources/metal.png");
 
     // shader configuration
     // --------------------
