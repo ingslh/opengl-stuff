@@ -1,3 +1,4 @@
+#define STB_IMAGE_IMPLEMENTATION
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
@@ -75,13 +76,13 @@ int main()
 
     // build and compile shaders
     // -------------------------
-    Shader asteroidShader("10.3.asteroids.vs", "10.3.asteroids.fs");
-    Shader planetShader("10.3.planet.vs", "10.3.planet.fs");
+    Shader asteroidShader("../asteroids.vs", "../asteroids.fs");
+    Shader planetShader("../planet.vs", "../planet.fs");
 
     // load models
     // -----------
-    Model rock(FileSystem::getPath("resources/objects/rock/rock.obj"));
-    Model planet(FileSystem::getPath("resources/objects/planet/planet.obj"));
+    Model rock("../../resources/objects/rock/rock.obj");
+    Model planet("../../resources/objects/planet/planet.obj");
 
     // generate a large list of semi-random model transformation matrices
     // ------------------------------------------------------------------
