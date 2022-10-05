@@ -82,7 +82,7 @@ int main()
 
     // load models
     // -----------
-    Model ourModel("../../resources/objects/nanosuit/nanosuit.obj");
+    Model ourModel("../../resources/objects/14-girl-obj/girl OBJ.obj");
 
     
     // draw in wireframe
