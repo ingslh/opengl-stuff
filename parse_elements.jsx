@@ -328,12 +328,10 @@
             }
           }
           if(layerType == "shapeLayer" && cur.matchName == 'ADBE Vector Shape - Group'){
-            var outTan = cur.property('Path').value.outTangents;
-            var elem = cur.property('Path').value.vertices;
-            var inTan = cur.property('Path').value.inTangents;
-            jObj[cur.name]["OutPos"] = outTan;
-            jObj[cur.name]["InPos"] = inTan;
-            jObj[cur.name]["Vertices"] = elem;
+            jObj[cur.name]["OutPos"] = cur.property('Path').value.outTangents;
+            jObj[cur.name]["InPos"] = cur.property('Path').value.inTangents;
+            jObj[cur.name]["Vertices"] = cur.property('Path').value.vertices;
+            jObj[cur.name]["Closed"] = cur.property('Path').value.closed;
           }
         }
       }else if(pro.propertyValueType == PropertyValueType.MARKER) {
