@@ -14,3 +14,4 @@
       ],
 ]
 ```
+2. 图形对应关系为ae中每一个shape对应的group（group内包含path、fill属性），因此每个shape可能对应多个渲染的shader，即每一个group（准确的说是path）需要有一个shader对应。
