@@ -300,17 +300,13 @@
       }
     }
 
-    function iterateLayerProperty(layerType, pro, jObj){
+    function iterateLayerProperty(layerType, pro, jObj) {
       if (pro.numProperties && pro.numProperties > 0){
         for (var i = 1; i <= pro.numProperties; i++){
           var cur = pro(i);
-          if (cur.numProperties && cur.numProperties > 0){
+          if (cur.numProperties && cur.numProperties > 0 && cur.name != "Material Options") {
             jObj[cur.name] = {};
             iterateLayerProperty(layerType, cur, jObj[cur.name]);
-            if(layerType == "shapeLayer" && cur.matchName == 'ADBE Vector Shape - Group'){
-              var elem = cur.property('Path').valueAtTime(0,true).vertices;
-              jObj[cur.name]["Vertices"] = elem;
-            }
           }
           else{
             // some value is readOnly or other type,via check propertyValueType
@@ -330,6 +326,14 @@
                 jObj[cur.name] = cur.value;
               }
             }
+          }
+          if(layerType == "shapeLayer" && cur.matchName == 'ADBE Vector Shape - Group'){
+            var outTan = cur.property('Path').value.outTangents;
+            var elem = cur.property('Path').value.vertices;
+            var inTan = cur.property('Path').value.inTangents;
+            jObj[cur.name]["OutPos"] = outTan;
+            jObj[cur.name]["InPos"] = inTan;
+            jObj[cur.name]["Vertices"] = elem;
           }
         }
       }else if(pro.propertyValueType == PropertyValueType.MARKER) {
