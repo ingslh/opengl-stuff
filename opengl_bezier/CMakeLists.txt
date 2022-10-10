@@ -19,6 +19,7 @@ else()
 	link_directories(/opt/homebrew/Cellar//glew/2.2.0_1/lib)
 	# glfw的库目录路径
 	link_directories(/opt/homebrew/Cellar/glfw/3.3.7/lib)
+endif(WIN32)
 
 add_executable(${PROJECT_NAME} ${DIR_SRCS})
 
