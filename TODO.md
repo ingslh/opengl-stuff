@@ -1,7 +1,3 @@
-1. 通过生成对应的shader -> 通过此方案是否可行 （skia）
-
-2. 生成对应的几何着色器（gs）
-
 
 ---
 2022.10.09
@@ -17,3 +13,16 @@
 2. 图形对应关系为ae中每一个shape对应的group（group内包含path、fill属性），因此每个shape可能对应多个渲染的shader，即每一个group（准确的说是path）需要有一个shader对应。
 
 3. 利用几何着色器进行打点，并绘制贝塞尔曲线；
+
+---
+2022.10.10
+1. Shape的transform-Position为该Shape锚点在画幅(布)中的绝对位置；
+2. Shape下Group的transform-Position为该group的锚点以1中的绝对位置为基的相对位置；
+3. Shape的transform-Anchor Point为锚点相对于整个Shape的相对位置，因此通过2求得的顶点坐标还需要减去该偏移值，得到最终的矢量路径坐标绝对值；
+
+4. ae中每个Path对应若干个矢量节点（vector_node），每个矢量节点包含三个向量（位置坐标，入点切点方向，出点切线方向）；
+
+5. 每两个矢量节点（vn_1、vn_2）可以构成一组用于渲染贝塞尔曲线的顶点数据，分别由vn_1与vn_2的位置坐标、vn_1的出点方向、vn_2的入点方向组成；
+
+6. 每一组顶点数据要对应一个VAO和VBO，用于渲染；
+
