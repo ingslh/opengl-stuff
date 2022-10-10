@@ -9,12 +9,16 @@ include_directories(
 
 AUX_SOURCE_DIRECTORY(src DIR_SRCS)
 
-set(CMAKE_CXX_FLAGS "-g -std=c++11 -Wformat")
+set(CMAKE_CXX_FLAGS "-std=c++11")
 
-# glew的库目录路径
-link_directories(/opt/homebrew/Cellar//glew/2.2.0_1/lib)
-# glfw的库目录路径
-link_directories(/opt/homebrew/Cellar/glfw/3.3.7/lib)
+
+if(WIN32)
+	link_directories(${CMAKE_SOURCE_DIR}/../lib)
+else()	
+	# glew的库目录路径
+	link_directories(/opt/homebrew/Cellar//glew/2.2.0_1/lib)
+	# glfw的库目录路径
+	link_directories(/opt/homebrew/Cellar/glfw/3.3.7/lib)
 
 add_executable(${PROJECT_NAME} ${DIR_SRCS})
 

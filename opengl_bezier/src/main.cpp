@@ -57,21 +57,38 @@ int main()
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
-	float points[] = {
-		-0.9f, 0.9f,   0.0f,
-		0.3f,  0.3f,   0.0f,
-		2.0f,  0.1f,   0.0f,
-		0.9f,  -0.9f,  0.0f,
-	};
-	unsigned int VBO, VAO;
-	glGenBuffers(1, &VBO);
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(points), &points, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
+  float points[][12] = {
+    {
+      -0.9f, 0.9f,   0.0f,
+      0.3f,  0.3f,   0.0f,
+      2.0f,  0.1f,   0.0f,
+      0.9f,  -0.9f,  0.0f,
+    },
+    {
+    0.9f,  -0.9f,  0.0f,
+    0.3f,  0.3f,   0.0f,
+    2.0f,  0.1f,   0.0f,
+    -0.9f,  -0.9f,  0.0f,
+    }
+  };
+
+	unsigned int VBOs[2], VAOs[2];
+	glGenBuffers(2, VBOs);
+	glGenVertexArrays(2, VAOs);
+
+	glBindVertexArray(VAOs[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(points[0]), &points[0], GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	glBindVertexArray(0);
+	glEnableVertexAttribArray(0);
+
+	glBindVertexArray(VAOs[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(points[1]), &points[1], GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	glEnableVertexAttribArray(0);
+
+
 
 	// render loop
 	// -----------
@@ -91,7 +108,11 @@ int main()
 		shader.setMat4("view", view);
 		shader.setMat4("model", model);
 
-		glBindVertexArray(VAO);
+		//根据ae中的path数据进行贝塞尔曲线绘制，每个曲线需要四个顶点
+		glBindVertexArray(VAOs[0]);
+		glDrawArrays(GL_LINES_ADJACENCY, 0, 4);
+
+		glBindVertexArray(VAOs[1]);
 		glDrawArrays(GL_LINES_ADJACENCY, 0, 4);
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -102,8 +123,8 @@ int main()
 
 	// optional: de-allocate all resources once they've outlived their purpose:
 	// ------------------------------------------------------------------------
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
+	glDeleteVertexArrays(2, VAOs);
+	glDeleteBuffers(2, VBOs);
 
 	glfwTerminate();
 	return 0;
