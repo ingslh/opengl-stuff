@@ -3,8 +3,6 @@
 #include <string>
 #include <vector>
 
-#define DIM 3
-
 class Transform{
 public:
   Transform(const nlohmann::json& transform);

@@ -2,15 +2,13 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
+class ShapeGroup;
 class Transform;
 class LayersInfo{
 public:
   LayersInfo(const nlohmann::json& layer);
 
 private:
-
-
-
   unsigned int index;
   std::string name;
   unsigned int blendingMode;
@@ -18,6 +16,6 @@ private:
   float startTime;
   float outPoint;
   float inPoint;
-  //Contents_vector<group>
+  std::vector<std::shared_ptr<ShapeGroup>> groups;
   std::shared_ptr<Transform> transform;
 };
