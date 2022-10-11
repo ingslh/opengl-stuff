@@ -13,7 +13,6 @@ LayersInfo::LayersInfo(const nlohmann::json& layer){
   transform = std::make_shared<Transform>(layer["Transform"]);
   auto contents = layer["Contents"].items();
   for(auto& el : contents){
-    auto test = el.value();
     groups.emplace_back(std::make_shared<ShapeGroup>(el.value()));
   }
 }

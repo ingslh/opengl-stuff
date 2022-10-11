@@ -11,6 +11,7 @@ public:
 
 private:
   nlohmann::json root_;
-  int layers_count_;
+  int layers_count_ = -1;
   std::vector<std::shared_ptr<LayersInfo>> layers_;
 };
+

@@ -18,7 +18,6 @@ JsonReader::JsonReader(const std::string& path){
     //get layers info
     auto layers = root_[root_.begin().key()]["layers"];
     for (auto& el_c : layers.items()) {
-      //auto layer = el_c.value();
       layers_.emplace_back(std::make_shared<LayersInfo>(el_c.value()));
     }
   }

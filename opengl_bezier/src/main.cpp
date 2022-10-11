@@ -19,7 +19,10 @@ Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 int main()
 {
 
-  JsonReader reader = JsonReader("../test.json");
+  JsonReader reader("../test.json");
+
+
+
 
 	// glfw: initialize and configure
 	// ------------------------------
