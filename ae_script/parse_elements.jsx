@@ -288,7 +288,9 @@
             };
             for (var ii = 1; ii <= layer.numProperties; ii++) {
               var name = layer.property(ii).name;
-          
+              if(name == "Layer Styles" || name == "Geometry Options" || 
+                 name == "Material Options" || name == "Audio" || name == "Marker") 
+                continue;
               curObj[name] = {};
               iterateLayerProperty("shapeLayer", layer[name], curObj[name]);
             }
@@ -304,7 +306,7 @@
       if (pro.numProperties && pro.numProperties > 0){
         for (var i = 1; i <= pro.numProperties; i++){
           var cur = pro(i);
-          if (cur.numProperties && cur.numProperties > 0 && cur.name != "Material Options") {
+          if (cur.numProperties && cur.numProperties > 0) {
             jObj[cur.name] = {};
             iterateLayerProperty(layerType, cur, jObj[cur.name]);
           }

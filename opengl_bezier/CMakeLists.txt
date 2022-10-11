@@ -9,7 +9,7 @@ include_directories(
 
 AUX_SOURCE_DIRECTORY(src DIR_SRCS)
 
-set(CMAKE_CXX_FLAGS "-std=c++11")
+list(APPEND CMAKE_CXX_FLAGS "-std=c++11")
 
 
 if(WIN32)
@@ -21,9 +21,22 @@ else()
 	link_directories(/opt/homebrew/Cellar/glfw/3.3.7/lib)
 endif(WIN32)
 
+#macro(makeLink src dest target)
+#  add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink ${src} ${dest}  DEPENDS  ${dest} COMMENT "mklink ${src} -> ${dest}")
+#endmacro()
+
 add_executable(${PROJECT_NAME} ${DIR_SRCS})
 
 # 指定glew库
-target_link_libraries(${PROJECT_NAME} GLEW)
+#target_link_libraries(${PROJECT_NAME} GLEW)
 # 指定glfw库
-target_link_libraries(${PROJECT_NAME} GLFW)
+#target_link_libraries(${PROJECT_NAME} GLFW)
+if(WIN32)
+	target_link_libraries(${PROJECT_NAME} glfw3)
+else()
+	target_link_libraries(${PROJECT_NAME} GLFW)
+endif(WIN32)
+
+if(MSVC)
+    configure_file(${CMAKE_SOURCE_DIR}/configuration/visualstudio.vcxproj.user.in ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.vcxproj.user @ONLY)
+endif(MSVC)

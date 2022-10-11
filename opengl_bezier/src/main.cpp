@@ -4,6 +4,7 @@
 
 #include "camera.h"
 #include "shader_g.h"
+#include "jsonreader.h"
 
 #include <iostream>
 
@@ -17,6 +18,9 @@ Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 
 int main()
 {
+
+  JsonReader reader = JsonReader("../test.json");
+
 	// glfw: initialize and configure
 	// ------------------------------
 	glfwInit();
