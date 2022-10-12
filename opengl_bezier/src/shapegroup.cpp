@@ -5,3 +5,7 @@ ShapeGroup::ShapeGroup(const nlohmann::json& json){
   transform = std::make_shared<Transform>(json["Transform"]);
   contents = std::make_shared<GroupContents>(json["Contents"]);
 }
+
+void ShapeGroup::CalcVertoffsetVal(const std::vector<float>& abs_anchor){
+  
+}

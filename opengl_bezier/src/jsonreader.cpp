@@ -1,4 +1,5 @@
 #include "jsonreader.h"
+#include "json_data_manager.h"
 #include <fstream>
 #include <iostream>
 
@@ -13,6 +14,7 @@ JsonReader::JsonReader(const std::string& path){
   catch (std::ifstream::failure& e){
     std::cout << "ERROR::JSON::FILE_NOT_SUCCESFULLY_READ: " << e.what() << std::endl;
   }
+  JsonDataManager::GetIns().SetBasicInfo(root_[root_.begin().key()]);
 
   if (!root_.is_null()) {
     //get layers info

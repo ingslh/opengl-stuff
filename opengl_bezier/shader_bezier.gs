@@ -16,8 +16,6 @@ void creatBezier(){
     vec3 p3 = gl_in[3].gl_Position.xyz;  
     for (int i=0; i<=segments; ++i ){
 	    float t = delta * float(i); 
-        //float   len =   length(p1 - p0)/2.0;   
-        // Linear interpolation 
         vec3 p;  
         p.x = (1 - t) * (1 - t) * (1 - t) * p0.x + 3 * t * (1 - t) * (1 - t)* p1.x + 3 * t*t* (1 - t)* p2.x + t * t * t * p3.x;
         p.y = (1 - t) * (1 - t) * (1 - t) * p0.y + 3 * t * (1 - t) * (1 - t)* p1.y + 3 * t*t* (1 - t)* p2.y + t * t * t * p3.y;

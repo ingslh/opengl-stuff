@@ -7,6 +7,8 @@ class Transform;
 class LayersInfo{
 public:
   LayersInfo(const nlohmann::json& layer);
+  std::vector<std::shared_ptr<ShapeGroup>> GetShapeGroup()const{ return groups;}
+  std::shared_ptr<Transform> GetShapeTransform()const{return transform;}
 
 private:
   unsigned int index;
