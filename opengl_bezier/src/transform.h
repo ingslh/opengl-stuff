@@ -29,7 +29,7 @@ struct vec3{
 class Transform{
 public:
   Transform(const nlohmann::json& transform);
-  vec3<float>& GetShapeGrapOffset();
+  vec3<float> GetShapeGrapOffset();
   vec3<float>& GetPosition(){return position;}
 private:
   vec3<float> anchor_point;

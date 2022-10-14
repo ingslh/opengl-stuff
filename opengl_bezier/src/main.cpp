@@ -59,21 +59,6 @@ int main()
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
-  float points[][12] = {
-    {
-      -0.9f, 0.9f,   0.0f,
-      0.3f,  0.3f,   0.0f,
-      2.0f,  0.1f,   0.0f,
-      0.9f,  -0.9f,  0.0f,
-    },
-    {
-    0.9f,  -0.9f,  0.0f,
-    0.3f,  0.3f,   0.0f,
-    2.0f,  0.1f,   0.0f,
-    -0.9f,  -0.9f,  0.0f,
-    }
-  };
-
   const unsigned int render_layer = 1;
   const unsigned int render_path = 2;
 

@@ -28,6 +28,6 @@ Transform::Transform(const nlohmann::json& transform){
   opacity = transform["Opacity"];
 }
 
-vec3<float>& Transform::GetShapeGrapOffset(){
+vec3<float> Transform::GetShapeGrapOffset(){
   return position - anchor_point;
 }
