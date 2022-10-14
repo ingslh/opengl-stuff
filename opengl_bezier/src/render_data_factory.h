@@ -1,6 +1,7 @@
 #pragma once
 #include "layersinfo.h"
 #include "pathinfo.h"
+#include <mutex>
 
 enum rDataType{
   tNONE_DATA = 0,
@@ -23,8 +24,13 @@ public:
     return type_;
   }
 
+  std::recursive_mutex& GetEditingLock(){
+    return mutex_;
+  }
+
 private:
   rDataType type_;
+  mutable std::recursive_mutex mutex_;
 };
 
 class VerticesRenderData : public BaseRenderData{
@@ -32,6 +38,8 @@ public:
   VerticesRenderData(const LayersInfo* layer);
   MultiPathsData& GetMultiPathsData(){return multi_paths_data_;}
   vec2 NormalizeVec2(const vec2& pos);
+  bool ConverToOpenglVert(unsigned int ind_path, unsigned int ind_vert, std::vector<float>& vert_info);
+  unsigned int GetVertNumUsePathInd(unsigned int ind) const { return multi_paths_data_[ind].size(); };
 private:
   MultiPathsData multi_paths_data_;
 };

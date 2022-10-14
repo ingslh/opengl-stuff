@@ -5,25 +5,20 @@
 #include "camera.h"
 #include "shader_g.h"
 #include "jsonreader.h"
+#include "render_data_factory.h"
 
 #include <iostream>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 // settings
-const unsigned int SCR_WIDTH = 1920;
-const unsigned int SCR_HEIGHT = 1080;
+const unsigned int SCR_WIDTH = 1000;
+const unsigned int SCR_HEIGHT = 1000;
 
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 1.0f));
 
 int main()
 {
-
-  JsonReader reader("../test.json");
-
-
-
-
 	// glfw: initialize and configure
 	// ------------------------------
 	glfwInit();
@@ -79,21 +74,30 @@ int main()
     }
   };
 
-	unsigned int VBOs[2], VAOs[2];
-	glGenBuffers(2, VBOs);
-	glGenVertexArrays(2, VAOs);
+  const unsigned int render_layer = 1;
+  const unsigned int render_path = 2;
 
-	glBindVertexArray(VAOs[0]);
-	glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(points[0]), &points[0], GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	glEnableVertexAttribArray(0);
+  JsonReader reader("../test.json");
+  auto path_data = SRenderDataFactory::GetIns().CreateVerticesData(reader.GetLayersInfo(render_layer).get());
+  const unsigned int verts_num = path_data->GetVertNumUsePathInd(render_path);
 
-	glBindVertexArray(VAOs[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(points[1]), &points[1], GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	glEnableVertexAttribArray(0);
+  unsigned int* VBOs = new unsigned int[verts_num];
+  unsigned int* VAOs = new unsigned int[verts_num];
+  glGenBuffers(verts_num, VBOs);
+  glGenVertexArrays(verts_num, VAOs);
+
+  for (unsigned int i = 0; i < verts_num; i++) {
+    std::vector<float> vert;
+    path_data->ConverToOpenglVert(render_path, i, vert);
+    float out_vert[12];
+    memcpy(out_vert, &vert[0], vert.size() * sizeof(vert[0]));
+
+    glBindVertexArray(VAOs[i]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOs[i]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(out_vert), &out_vert, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+    glEnableVertexAttribArray(0);
+  }
 
 	// render loop
 	// -----------
@@ -106,7 +110,7 @@ int main()
 
 		// draw points
 		shader.use();
-		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+		glm::mat4 projection = glm::perspective(45.0f, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 view = camera.GetViewMatrix();
 		glm::mat4 model = glm::mat4(1.0f);
 		shader.setMat4("projection", projection);
@@ -114,11 +118,10 @@ int main()
 		shader.setMat4("model", model);
 
 		//根据ae中的path数据进行贝塞尔曲线绘制，每个曲线需要四个顶点
-		glBindVertexArray(VAOs[0]);
-		glDrawArrays(GL_LINES_ADJACENCY, 0, 4);
-
-		glBindVertexArray(VAOs[1]);
-		glDrawArrays(GL_LINES_ADJACENCY, 0, 4);
+    for (unsigned int i = 0; i < verts_num; i++) {
+      glBindVertexArray(VAOs[i]);
+      glDrawArrays(GL_LINES_ADJACENCY, 0, 4);
+    }
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
@@ -128,8 +131,8 @@ int main()
 
 	// optional: de-allocate all resources once they've outlived their purpose:
 	// ------------------------------------------------------------------------
-	glDeleteVertexArrays(2, VAOs);
-	glDeleteBuffers(2, VBOs);
+	glDeleteVertexArrays(verts_num, VAOs);
+	glDeleteBuffers(verts_num, VBOs);
 
 	glfwTerminate();
 	return 0;

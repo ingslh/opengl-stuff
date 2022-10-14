@@ -8,7 +8,7 @@ template<typename T>
 void SafeDelete(BaseRenderData* data){
   auto concreate = static_cast<T*>(data);
   {
-    std::lock_guard<std::recursive_mutex> guard(concreate->GetEditinglock());
+    std::lock_guard<std::recursive_mutex> guard(concreate->BaseRenderData::GetEditingLock());
     delete data;
   }
 }
@@ -32,6 +32,7 @@ VerticesRenderData::VerticesRenderData(const LayersInfo* data){
       for(auto i = 0; i < vertices_count; i++){
         VertCluster vert_cluster;
         vert_cluster.start_pos = vertices[i] + final_offset;
+        //normalizing vertices pos for render,as 0~1.
         vert_cluster.out_dir = NormalizeVec2(out_pos[i] + vert_cluster.start_pos);
         vert_cluster.start_pos = NormalizeVec2(vert_cluster.start_pos);
 
@@ -48,17 +49,33 @@ VerticesRenderData::VerticesRenderData(const LayersInfo* data){
       multi_paths_data_.emplace_back(signal_path);
     }
   }
-
-  //normalizing vertices pos for render,as 0~1.
 }
 
 vec2 VerticesRenderData::NormalizeVec2(const vec2& pos){
   auto width = JsonDataManager::GetIns().GetWidth();
   auto height = JsonDataManager::GetIns().GetHeight();
   vec2 ret;
-  ret.x = pos.x / width;
-  ret.y = pos.y / height;
+  ret.x = (pos.x - width/2) / width;
+  ret.y = (pos.y - height/2) / height;
   return ret;
+}
+
+bool VerticesRenderData::ConverToOpenglVert(unsigned int path_ind, unsigned int vert_ind, std::vector<float>& verts) {
+  auto path = multi_paths_data_[path_ind];
+  verts.resize(12);
+  verts[0] = path[vert_ind].start_pos.x;
+  verts[1] = path[vert_ind].start_pos.y;
+  verts[2] = 0.0f;
+  verts[3] = path[vert_ind].out_dir.x;
+  verts[4] = path[vert_ind].out_dir.y;
+  verts[5] = 0.0f;
+  verts[6] = path[vert_ind].in_dir.x;
+  verts[7] = path[vert_ind].in_dir.y;
+  verts[8] = 0.0f;
+  verts[9] = path[vert_ind].end_pos.x;
+  verts[10] = path[vert_ind].end_pos.y;
+  verts[11] = 0.0f;
+  return true;
 }
 
 ColorRenderData::ColorRenderData(const LayersInfo* data){
@@ -86,4 +103,5 @@ bool RenderDataFactory::ReleaseRenderData(BaseRenderData* data){
   default:
     return false;
   }
+  return true;
 }
