@@ -78,6 +78,28 @@ bool VerticesRenderData::ConverToOpenglVert(unsigned int path_ind, unsigned int 
   return true;
 }
 
+bool VerticesRenderData::ConverToOpenglVert(unsigned int path_ind, std::vector<float>& verts){
+  auto vertices = multi_paths_data_[path_ind];
+  verts.resize(12 * vertices.size());
+  auto vert_cluster_ind = 0;
+  for(auto& el : vertices){
+    verts[vert_cluster_ind * 12] = el.start_pos.x;
+    verts[vert_cluster_ind * 12 + 1] = el.start_pos.y;
+    verts[vert_cluster_ind * 12 + 2] = 0.0f;
+    verts[vert_cluster_ind * 12 + 3] = el.out_dir.x;
+    verts[vert_cluster_ind * 12 + 4] = el.out_dir.y;
+    verts[vert_cluster_ind * 12 + 5] = 0.0f;
+    verts[vert_cluster_ind * 12 + 6] = el.in_dir.x;
+    verts[vert_cluster_ind * 12 + 7] = el.in_dir.y;
+    verts[vert_cluster_ind * 12 + 8] = 0.0f;
+    verts[vert_cluster_ind * 12 + 9] = el.end_pos.x;
+    verts[vert_cluster_ind * 12 + 10] = el.end_pos.y;
+    verts[vert_cluster_ind * 12 + 11] = 0.0f;
+    vert_cluster_ind++;
+  }
+  return true;
+}
+
 ColorRenderData::ColorRenderData(const LayersInfo* data){
 
 }

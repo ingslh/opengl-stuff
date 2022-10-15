@@ -59,41 +59,37 @@ int main()
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
-  //const unsigned int render_layer = 1;
-  //const unsigned int render_path = 2;
 
   JsonReader reader("../test.json");
-  unsigned int all_vert_count = 0, vert_ind = 0;
-  std::unordered_map<unsigned int, std::vector<unsigned int>> vertices_map;
+  unsigned int path_ind = 0;
+  std::map<unsigned int, std::vector<unsigned int>> paths_map;
   std::vector<VerticesRenderDataPtr> layers_path_data;
   auto layers_count = reader.getLayersCount();
   for (unsigned int i = 0; i < layers_count; i++) {
-    auto path_data = SRenderDataFactory::GetIns().CreateVerticesData(reader.GetLayersInfo(i).get());
-    auto path_count = path_data->GetMultiPathsData().size();
-    layers_path_data.emplace_back(path_data);
-    for (unsigned int j = 0; j < path_count; j++) {
-      auto signal_path_verts_count = path_data->GetVertNumUsePathInd(j);
-      all_vert_count += signal_path_verts_count;
-      for (unsigned int k = 0; k < signal_path_verts_count; k++, vert_ind++) {
-        std::vector<unsigned int> tmp = { i,j,k };
-        vertices_map.emplace(vert_ind, tmp);
-      }
+    auto layer_contents_data = SRenderDataFactory::GetIns().CreateVerticesData(reader.GetLayersInfo(i).get());
+    auto path_count = layer_contents_data->GetMultiPathsData().size();
+    layers_path_data.emplace_back(layer_contents_data);
+    for (unsigned int j = 0; j < path_count; j++, path_ind++) {
+      auto signal_path_verts_count = layer_contents_data->GetVertNumUsePathInd(j);
+			std::vector<unsigned int> tmp ={i, j, signal_path_verts_count};
+			paths_map.emplace(path_ind, tmp);
     }
   }
-
+	auto paths_count = path_ind;
   //auto path_data = SRenderDataFactory::GetIns().CreateVerticesData(reader.GetLayersInfo(render_layer).get());
   //const unsigned int verts_num = path_data->GetVertNumUsePathInd(render_path);
 
-  unsigned int* VBOs = new unsigned int[all_vert_count];
-  unsigned int* VAOs = new unsigned int[all_vert_count];
-  glGenBuffers(all_vert_count, VBOs);
-  glGenVertexArrays(all_vert_count, VAOs);
+  unsigned int* VBOs = new unsigned int[paths_count];
+  unsigned int* VAOs = new unsigned int[paths_count];
+  glGenBuffers(paths_count, VBOs);
+  glGenVertexArrays(paths_count, VAOs);
 
 
-  for (auto it = vertices_map.begin(); it != vertices_map.end(); it++) {
+  for (auto it = paths_map.begin(); it != paths_map.end(); it++) {
     std::vector<float> vert;
-    layers_path_data[it->second[0]]->ConverToOpenglVert(it->second[1], it->second[2], vert);
-    float out_vert[12];
+		layers_path_data[it->second[0]] -> ConverToOpenglVert(it->second[1],vert);
+
+    float* out_vert = new float[12 * it->second[2]];
     memcpy(out_vert, &vert[0], vert.size() * sizeof(vert[0]));
 
     glBindVertexArray(VAOs[it->first]);
@@ -123,7 +119,7 @@ int main()
 		shader.setMat4("view", view);
 		shader.setMat4("model", model);
 
-    for (unsigned int i = 0; i < all_vert_count; i++) {
+    for (unsigned int i = 0; i < paths_count; i++) {
       glBindVertexArray(VAOs[i]);
       glDrawArrays(GL_LINES_ADJACENCY, 0, 4);
     }
@@ -136,8 +132,8 @@ int main()
 
 	// optional: de-allocate all resources once they've outlived their purpose:
 	// ------------------------------------------------------------------------
-	glDeleteVertexArrays(all_vert_count, VAOs);
-	glDeleteBuffers(all_vert_count, VBOs);
+	glDeleteVertexArrays(paths_count, VAOs);
+	glDeleteBuffers(paths_count, VBOs);
 
 	glfwTerminate();
 	return 0;
