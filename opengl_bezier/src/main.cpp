@@ -55,7 +55,7 @@ int main()
 
 	// build and compile shaders
 	// -------------------------
-	Shader shader("../shader_bezier.vs", "../shader_bezier.fs", "../shader_bezier.gs");
+	Shader shader("../shader_bezier.vert", "../shader_bezier.frag", "../shader_bezier.geom");
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
@@ -121,7 +121,7 @@ int main()
 
     for (unsigned int i = 0; i < paths_count; i++) {
       glBindVertexArray(VAOs[i]);
-      glDrawArrays(GL_LINES_ADJACENCY, 0, 4);
+      glDrawArrays(GL_LINES_ADJACENCY, 0, 4 * paths_map[i][2]);
     }
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
