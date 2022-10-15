@@ -39,7 +39,7 @@ public:
   MultiPathsData& GetMultiPathsData(){return multi_paths_data_;}
   vec2 NormalizeVec2(const vec2& pos);
   bool ConverToOpenglVert(unsigned int ind_path, unsigned int ind_vert, std::vector<float>& vert_info);
-  unsigned int GetVertNumUsePathInd(unsigned int ind) const { return multi_paths_data_[ind].size(); };
+  unsigned int GetVertNumUsePathInd(unsigned int ind) const { return static_cast<unsigned int>(multi_paths_data_[ind].size()); };
 private:
   MultiPathsData multi_paths_data_;
 };

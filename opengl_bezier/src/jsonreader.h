@@ -6,7 +6,7 @@
 class JsonReader{
 public:
   JsonReader(const std::string& path);
-  int getLayersCount();
+  unsigned int getLayersCount();
   std::shared_ptr<LayersInfo> GetLayersInfo(unsigned int ind);
 
 private:

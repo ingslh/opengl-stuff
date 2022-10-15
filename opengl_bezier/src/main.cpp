@@ -15,7 +15,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 const unsigned int SCR_WIDTH = 1000;
 const unsigned int SCR_HEIGHT = 1000;
 
-Camera camera(glm::vec3(0.0f, 0.0f, 1.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 0.9f));
 
 int main()
 {
@@ -59,31 +59,52 @@ int main()
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
-  const unsigned int render_layer = 1;
-  const unsigned int render_path = 2;
+  //const unsigned int render_layer = 1;
+  //const unsigned int render_path = 2;
 
   JsonReader reader("../test.json");
-  auto path_data = SRenderDataFactory::GetIns().CreateVerticesData(reader.GetLayersInfo(render_layer).get());
-  const unsigned int verts_num = path_data->GetVertNumUsePathInd(render_path);
+  unsigned int all_vert_count = 0, vert_ind = 0;
+  std::unordered_map<unsigned int, std::vector<unsigned int>> vertices_map;
+  std::vector<VerticesRenderDataPtr> layers_path_data;
+  auto layers_count = reader.getLayersCount();
+  for (unsigned int i = 0; i < layers_count; i++) {
+    auto path_data = SRenderDataFactory::GetIns().CreateVerticesData(reader.GetLayersInfo(i).get());
+    auto path_count = path_data->GetMultiPathsData().size();
+    layers_path_data.emplace_back(path_data);
+    for (unsigned int j = 0; j < path_count; j++) {
+      auto signal_path_verts_count = path_data->GetVertNumUsePathInd(j);
+      all_vert_count += signal_path_verts_count;
+      for (unsigned int k = 0; k < signal_path_verts_count; k++, vert_ind++) {
+        std::vector<unsigned int> tmp = { i,j,k };
+        vertices_map.emplace(vert_ind, tmp);
+      }
+    }
+  }
 
-  unsigned int* VBOs = new unsigned int[verts_num];
-  unsigned int* VAOs = new unsigned int[verts_num];
-  glGenBuffers(verts_num, VBOs);
-  glGenVertexArrays(verts_num, VAOs);
+  //auto path_data = SRenderDataFactory::GetIns().CreateVerticesData(reader.GetLayersInfo(render_layer).get());
+  //const unsigned int verts_num = path_data->GetVertNumUsePathInd(render_path);
 
-  for (unsigned int i = 0; i < verts_num; i++) {
+  unsigned int* VBOs = new unsigned int[all_vert_count];
+  unsigned int* VAOs = new unsigned int[all_vert_count];
+  glGenBuffers(all_vert_count, VBOs);
+  glGenVertexArrays(all_vert_count, VAOs);
+
+
+  for (auto it = vertices_map.begin(); it != vertices_map.end(); it++) {
     std::vector<float> vert;
-    path_data->ConverToOpenglVert(render_path, i, vert);
+    layers_path_data[it->second[0]]->ConverToOpenglVert(it->second[1], it->second[2], vert);
     float out_vert[12];
     memcpy(out_vert, &vert[0], vert.size() * sizeof(vert[0]));
 
-    glBindVertexArray(VAOs[i]);
-    glBindBuffer(GL_ARRAY_BUFFER, VBOs[i]);
+    glBindVertexArray(VAOs[it->first]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOs[it->first]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(out_vert), &out_vert, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
     glEnableVertexAttribArray(0);
   }
-
+	
+	// draw in wireframe
+  //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	// render loop
 	// -----------
 	while (!glfwWindowShouldClose(window))
@@ -102,8 +123,7 @@ int main()
 		shader.setMat4("view", view);
 		shader.setMat4("model", model);
 
-		//根据ae中的path数据进行贝塞尔曲线绘制，每个曲线需要四个顶点
-    for (unsigned int i = 0; i < verts_num; i++) {
+    for (unsigned int i = 0; i < all_vert_count; i++) {
       glBindVertexArray(VAOs[i]);
       glDrawArrays(GL_LINES_ADJACENCY, 0, 4);
     }
@@ -116,8 +136,8 @@ int main()
 
 	// optional: de-allocate all resources once they've outlived their purpose:
 	// ------------------------------------------------------------------------
-	glDeleteVertexArrays(verts_num, VAOs);
-	glDeleteBuffers(verts_num, VBOs);
+	glDeleteVertexArrays(all_vert_count, VAOs);
+	glDeleteBuffers(all_vert_count, VBOs);
 
 	glfwTerminate();
 	return 0;

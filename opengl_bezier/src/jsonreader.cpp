@@ -25,14 +25,12 @@ JsonReader::JsonReader(const std::string& path){
   }
 }
 
-int JsonReader::getLayersCount() {
-  if (layers_count_ != -1)
-    return layers_count_;
-  else if(!root_.is_null()){
-    return root_[root_.begin().key()]["layers"].size();
+unsigned int JsonReader::getLayersCount() {
+  if(!root_.is_null()){
+    return static_cast<unsigned int>(root_[root_.begin().key()]["layers"].size());
   }
   else {
-    return -1;
+    return 0;
   }
 }
 
