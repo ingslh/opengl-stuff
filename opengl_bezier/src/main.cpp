@@ -98,7 +98,7 @@ int main()
   }
 	
 	// draw in wireframe
-  //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+  // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	// render loop
 	// -----------
 	while (!glfwWindowShouldClose(window))

@@ -1,15 +1,15 @@
 #version 330 core
  
 layout (lines_adjacency) in;
-layout (line_strip, max_vertices = 200) out; 
+layout (line_strip, max_vertices = 256) out; //win:max support vertices num is 256
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-void creatBezier(){
-    int segments = 100;
+void creatBezier(int segments){
     float delta = 1.0 / float(segments);
+    int count = 0;
     for(int ind=0; ind < gl_in.length()/4; ind++){
         vec3 p0 = gl_in[4* ind + 0].gl_Position.xyz;   
         vec3 p1 = gl_in[4* ind + 1].gl_Position.xyz;   
@@ -28,5 +28,8 @@ void creatBezier(){
 }
  
 void main(){
-    creatBezier();
+    const int in_vert_length = gl_in.length();
+    const int segments = 10;
+    creatBezier(segments);
+
 }
