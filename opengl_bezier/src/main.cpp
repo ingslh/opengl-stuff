@@ -76,8 +76,6 @@ int main()
     }
   }
 	auto paths_count = path_ind;
-  //auto path_data = SRenderDataFactory::GetIns().CreateVerticesData(reader.GetLayersInfo(render_layer).get());
-  //const unsigned int verts_num = path_data->GetVertNumUsePathInd(render_path);
 
   unsigned int* VBOs = new unsigned int[paths_count];
   unsigned int* VAOs = new unsigned int[paths_count];
@@ -89,12 +87,12 @@ int main()
     std::vector<float> vert;
 		layers_path_data[it->second[0]] -> ConverToOpenglVert(it->second[1],vert);
 
-    float* out_vert = new float[12 * it->second[2]];
+    auto out_vert = new float[12 * it->second[2]];
     memcpy(out_vert, &vert[0], vert.size() * sizeof(vert[0]));
 
     glBindVertexArray(VAOs[it->first]);
     glBindBuffer(GL_ARRAY_BUFFER, VBOs[it->first]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(out_vert), &out_vert, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 12 * it->second[2], out_vert, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
     glEnableVertexAttribArray(0);
   }
