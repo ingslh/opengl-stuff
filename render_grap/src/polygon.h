@@ -69,7 +69,12 @@ public:
   void reverse(int ind);
 
   //void SplitToConvex();
-  bool IsConvex()const { return is_convex_; }
+  //bool IsConvex()const { return is_convex_; }
+  bool isConvex(Vertices* active);
+  bool inTriangle(Vertices pointToCheck, Vertices earTip, Vertices earTipPlus, Vertices earTipMinus);
+  bool isEar(Vertices* active);
+
+
 
 protected:
   Vertices* head;

@@ -307,6 +307,46 @@ void Polygon::reverse(int pos) {
   } while (active != head);
 }
 
+bool Polygon::isConvex(Vertices* active){
+  auto pre = *active->previous;
+  auto cur = *active;
+  auto next = *active->next;
+
+  return (( pre.pos.x * (next.pos.y - cur.pos.y )) + 
+  (cur.pos.x * (pre.pos.y - next.pos.y )) + ( next.pos.x * (cur.pos.y - pre.pos.y ))) < 0; 
+}
+
+typedef Vertices Vector;
+bool Polygon::inTriangle(Vertices pointToCheck, Vertices earTip, Vertices earTipPlus, Vertices earTipMinus){
+  if( ( pointToCheck.pos.x == earTip.pos.x && pointToCheck.pos.y == earTip.pos.y ) ||
+			( pointToCheck.pos.x == earTipPlus.pos.x && pointToCheck.pos.y == earTipPlus.pos.y ) ||
+			( pointToCheck.pos.x == earTipMinus.pos.x && pointToCheck.pos.y == earTipMinus.pos.y ) )
+			return false; // ignore duplicates
+  Vector v0 = Vector(glm::vec2((earTipMinus.pos.x - earTip.pos.x ), (earTipMinus.pos.y - earTip.pos.y )));
+	Vector v1 = Vector(glm::vec2(( earTipPlus.pos.x - earTip.pos.x ), (earTipPlus.pos.y - earTip.pos.y )));
+	Vector v2 = Vector(glm::vec2(( pointToCheck.pos.x - earTip.pos.x ), (pointToCheck.pos.y - earTip.pos.y)));  
+
+  float u = ( v1.dot( v1 ) * v2.dot( v0 ) - v1.dot( v0 ) * v2.dot( v1 ) ) 
+            / ( v0.dot( v0 ) * v1.dot( v1 ) - v0.dot( v1 ) * v1.dot( v0 ) );
+	float v = ( v0.dot( v0 ) * v2.dot( v1 ) - v0.dot( v1 ) * v2.dot( v0 ) ) 
+            / ( v0.dot( v0 ) * v1.dot( v1 ) - v0.dot( v1 ) * v1.dot( v0 ) );  
+
+  if( u < 0 || v < 0 || u > 1 || v > 1 || ( u + v ) > 1 ) return false;
+
+	return true;
+}
+
+bool Polygon::isEar(Vertices* active){
+  Vertices* checker = active->next->next;
+  while(checker != active->previous){
+    if(inTriangle( *checker, *active, *active->next, *active->previous)){
+      return false;
+    }
+		checker = checker->next;
+	}
+	return true;
+}
+
 
 
 /*void Polygon::SplitToConvex(const std::vector<glm::vec2>& vert){
