@@ -28,9 +28,8 @@ PathInfo::PathInfo(const nlohmann::json& json){
 
   if(closed){
     auto bezier_verts = std::make_shared<BezierGenerator>(vertices, out_pos_vec, in_pos_vec);
-    //auto bezier_test = bezier_verts -> getBezierVerts();
+    bezier_verts_ = bezier_verts -> getBezierVerts();
     auto polygon = std::make_shared<PolygonArray>(bezier_verts->getBezierVerts());
-    //auto test = polygon->getVertices();
-    auto indices = mapbox::earcut<int>(polygon->getVertices());
+    tri_index_list_ = mapbox::earcut<unsigned int>(polygon->getVertices());
   }
 }

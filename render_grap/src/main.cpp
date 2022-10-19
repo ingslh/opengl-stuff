@@ -55,23 +55,28 @@ int main()
 
 	// build and compile shaders
 	// -------------------------
-	Shader shader("../shader_bezier.vert", "../shader_bezier.frag", "../shader_bezier.geom");
+	//Shader shader("../shader_bezier.vert", "../shader_bezier.frag", "../shader_bezier.geom");
+	Shader shader("../shader_bezier.vert", "../shader_bezier.frag");
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
 
   JsonReader reader("../test.json");
   unsigned int path_ind = 0;
-  std::map<unsigned int, std::vector<unsigned int>> paths_map;
   std::vector<VerticesRenderDataPtr> layers_path_data;
+
+	std::map<unsigned int, std::vector<unsigned int>> paths_map;//all_path_ind;{layer_ind, path_ind, vert_count}
+
   auto layers_count = reader.getLayersCount();
   for (unsigned int i = 0; i < layers_count; i++) {
     auto layer_contents_data = SRenderDataFactory::GetIns().CreateVerticesData(reader.GetLayersInfo(i).get());
-    auto path_count = layer_contents_data->GetMultiPathsData().size();
-    layers_path_data.emplace_back(layer_contents_data);
+		layers_path_data.emplace_back(layer_contents_data);
+
+    auto path_count = layer_contents_data->GetPathsCount();//only in this layer
     for (unsigned int j = 0; j < path_count; j++, path_ind++) {
       auto signal_path_verts_count = layer_contents_data->GetVertNumUsePathInd(j);
-			std::vector<unsigned int> tmp ={i, j, signal_path_verts_count};
+			auto indices_count = layer_contents_data->GetTriangleIndexSize(j);
+			std::vector<unsigned int> tmp ={i, j, signal_path_verts_count, indices_count};
 			paths_map.emplace(path_ind, tmp);
     }
   }
@@ -79,20 +84,39 @@ int main()
 
   unsigned int* VBOs = new unsigned int[paths_count];
   unsigned int* VAOs = new unsigned int[paths_count];
+	unsigned int* EBOs = new unsigned int[paths_count];
   glGenBuffers(paths_count, VBOs);
+	glGenBuffers(paths_count, EBOs);
   glGenVertexArrays(paths_count, VAOs);
 
 
   for (auto it = paths_map.begin(); it != paths_map.end(); it++) {
     std::vector<float> vert;
-		layers_path_data[it->second[0]] -> ConverToOpenglVert(it->second[1],vert);
+		std::vector<unsigned int> tri_index;
+		layers_path_data[it->second[0]] -> ConverToOpenglVert(it->second[1], vert);
 
-    auto out_vert = new float[12 * it->second[2]];
+		unsigned int vert_array_size = 0;
+		if(layers_path_data[it->second[0]]->GetOutBezier()){
+			vert_array_size = it->second[2];
+
+			tri_index = layers_path_data[it->second[0]]->GetTriangleIndex(it->second[1]);
+		}else{
+			vert_array_size = 12 * it->second[2];
+		}
+
+    auto out_vert = new float[vert_array_size];
     memcpy(out_vert, &vert[0], vert.size() * sizeof(vert[0]));
+
+		auto indices = new unsigned int[tri_index.size()];
+		memcpy(indices, &tri_index[0], tri_index.size() * sizeof(tri_index[0]));
 
     glBindVertexArray(VAOs[it->first]);
     glBindBuffer(GL_ARRAY_BUFFER, VBOs[it->first]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 12 * it->second[2], out_vert, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * it->second[2], out_vert, GL_STATIC_DRAW);
+
+		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[it->first]);
+		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * tri_index.size(), indices, GL_STATIC_DRAW);
+
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
     glEnableVertexAttribArray(0);
   }
@@ -117,10 +141,13 @@ int main()
 		shader.setMat4("view", view);
 		shader.setMat4("model", model);
 
-    for (unsigned int i = 0; i < paths_count; i++) {
+    /*for (unsigned int i = 0; i < paths_count; i++) {
       glBindVertexArray(VAOs[i]);
-      glDrawArrays(GL_LINES_ADJACENCY, 0, 4 * paths_map[i][2]);
-    }
+      //glDrawArrays(GL_LINES_ADJACENCY, 0, 4 * paths_map[i][2]);
+			glDrawElements(GL_TRIANGLES, paths_map[i][3], GL_UNSIGNED_INT, 0);
+    }*/
+    glBindVertexArray(VAOs[1]);
+    glDrawElements(GL_TRIANGLES, paths_map[1][3], GL_UNSIGNED_INT, 0);
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
@@ -132,6 +159,7 @@ int main()
 	// ------------------------------------------------------------------------
 	glDeleteVertexArrays(paths_count, VAOs);
 	glDeleteBuffers(paths_count, VBOs);
+	glDeleteBuffers(paths_count, EBOs);
 
 	glfwTerminate();
 	return 0;

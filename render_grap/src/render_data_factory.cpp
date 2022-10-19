@@ -13,43 +13,75 @@ void SafeDelete(BaseRenderData* data){
   }
 }
 
-VerticesRenderData::VerticesRenderData(const LayersInfo* data){
-  //get gobal coordation for path vertices(no keyframe)
+VerticesRenderData::VerticesRenderData(const LayersInfo* data, bool out_bezier): out_bezier_(out_bezier){
   auto shape_offset = data->GetShapeTransform()->GetShapeGrapOffset();
 
-  //progress layer's vector path information as vertices for opengl render
+  paths_count_ = 0;
   auto shape_groups = data->GetShapeGroup();
   for(auto& group : shape_groups){
     auto paths = group->GetContents()->GetPaths();
+    paths_count_ += paths.size();
     auto final_offset = group->GetTransform()->GetPosition() + shape_offset; 
 
-    for(auto& path : paths){
-      auto vertices = path->GetVertices();
-      auto in_pos = path->GetInPosVec();
-      auto out_pos = path->GetOutPosVec();
-      auto vertices_count = vertices.size();
-      SignalPathData signal_path;
-      for(auto i = 0; i < vertices_count; i++){
-        VertCluster vert_cluster;
-        vert_cluster.start_pos = vertices[i] + glm::vec2(final_offset.x, final_offset.y);
-        //normalizing vertices pos for render,as 0~1.
-        vert_cluster.out_dir = NormalizeVec2(out_pos[i] + vert_cluster.start_pos);
-        vert_cluster.start_pos = NormalizeVec2(vert_cluster.start_pos);
+    for(auto& path : paths) {
+      if(!out_bezier_){
+        bezier_vert_data_.clear();
 
-        if(i != vertices_count - 1){
-          vert_cluster.end_pos = vertices[i + 1] + glm::vec2(final_offset.x, final_offset.y);
-          vert_cluster.in_dir = NormalizeVec2(in_pos[i + 1] + vert_cluster.end_pos);
-        }else{
-          vert_cluster.end_pos = vertices[0] + glm::vec2(final_offset.x, final_offset.y);
-          vert_cluster.in_dir = NormalizeVec2(in_pos[0] + vert_cluster.end_pos);
+        auto vertices = path->GetVertices();
+        auto in_pos = path->GetInPosVec();
+        auto out_pos = path->GetOutPosVec();
+
+        auto vertices_count = vertices.size();
+        SignalPathData signal_path;
+        for(auto i = 0; i < vertices_count; i++){
+          VertCluster vert_cluster;
+          vert_cluster.start_pos = vertices[i] + glm::vec2(final_offset.x, final_offset.y);
+          vert_cluster.out_dir = NormalizeVec2(out_pos[i] + vert_cluster.start_pos);
+          vert_cluster.start_pos = NormalizeVec2(vert_cluster.start_pos);
+
+          if(i != vertices_count - 1){
+            vert_cluster.end_pos = vertices[i + 1] + glm::vec2(final_offset.x, final_offset.y);
+            vert_cluster.in_dir = NormalizeVec2(in_pos[i + 1] + vert_cluster.end_pos);
+          }else{
+            vert_cluster.end_pos = vertices[0] + glm::vec2(final_offset.x, final_offset.y);
+            vert_cluster.in_dir = NormalizeVec2(in_pos[0] + vert_cluster.end_pos);
+          }
+          vert_cluster.end_pos = NormalizeVec2(vert_cluster.end_pos);
+          signal_path.emplace_back(vert_cluster);
         }
-        vert_cluster.end_pos = NormalizeVec2(vert_cluster.end_pos);
-        signal_path.emplace_back(vert_cluster);
+        multi_paths_data_.emplace_back(signal_path);
       }
-      multi_paths_data_.emplace_back(signal_path);
+      else{
+        multi_paths_data_.clear();
+        BezierVertData signal_path_data;
+        auto bezier_verts = path->GetBezierVertices();
+        auto bezier_verts_count = bezier_verts.size();
+        for(auto i = 0; i < bezier_verts_count; i++){
+
+          auto test = bezier_verts[i] + glm::vec2(final_offset.x, final_offset.y);
+
+          auto tmp_vert = NormalizeVec2(bezier_verts[i] + glm::vec2(final_offset.x, final_offset.y));
+          signal_path_data.verts.emplace_back(tmp_vert.x);
+          signal_path_data.verts.emplace_back(tmp_vert.y);
+          signal_path_data.verts.emplace_back(0);
+        }
+        signal_path_data.tri_index = path->GetTriIndexList();
+        bezier_vert_data_.emplace_back(signal_path_data);
+      }
     }
   }
 }
+
+unsigned int VerticesRenderData::GetVertNumUsePathInd(unsigned int ind) const { 
+  if(multi_paths_data_.size()){
+    return static_cast<unsigned int>(multi_paths_data_[ind].size()); 
+  }
+  else if(bezier_vert_data_.size()){
+    return static_cast<unsigned int>(bezier_vert_data_[ind].verts.size());
+  }
+}
+
+
 
 glm::vec2 VerticesRenderData::NormalizeVec2(const glm::vec2& pos){
   auto width = JsonDataManager::GetIns().GetWidth();
@@ -60,44 +92,40 @@ glm::vec2 VerticesRenderData::NormalizeVec2(const glm::vec2& pos){
   return ret;
 }
 
-bool VerticesRenderData::ConverToOpenglVert(unsigned int path_ind, unsigned int vert_ind, std::vector<float>& verts) {
-  auto path = multi_paths_data_[path_ind];
-  verts.resize(12);
-  verts[0] = path[vert_ind].start_pos.x;
-  verts[1] = path[vert_ind].start_pos.y;
-  verts[2] = 0.0f;
-  verts[3] = path[vert_ind].out_dir.x;
-  verts[4] = path[vert_ind].out_dir.y;
-  verts[5] = 0.0f;
-  verts[6] = path[vert_ind].in_dir.x;
-  verts[7] = path[vert_ind].in_dir.y;
-  verts[8] = 0.0f;
-  verts[9] = path[vert_ind].end_pos.x;
-  verts[10] = path[vert_ind].end_pos.y;
-  verts[11] = 0.0f;
-  return true;
+glm::vec3 VerticesRenderData::NormalizeVec3(const glm::vec3& pos){
+  auto width = JsonDataManager::GetIns().GetWidth();
+  auto height = JsonDataManager::GetIns().GetHeight();
+  glm::vec3 ret;
+  ret.x = (pos.x - width/2) / width;
+  ret.y = (pos.y - height/2) / height;
+  ret.z = 0;
+  return ret;
 }
 
 bool VerticesRenderData::ConverToOpenglVert(unsigned int path_ind, std::vector<float>& verts){
-  auto vertices = multi_paths_data_[path_ind];
-  verts.resize(12 * vertices.size());
-  auto vert_cluster_ind = 0;
-  for(auto& el : vertices){
-    verts[vert_cluster_ind * 12] = el.start_pos.x;
-    verts[vert_cluster_ind * 12 + 1] = el.start_pos.y;
-    verts[vert_cluster_ind * 12 + 2] = 0.0f;
-    verts[vert_cluster_ind * 12 + 3] = el.out_dir.x;
-    verts[vert_cluster_ind * 12 + 4] = el.out_dir.y;
-    verts[vert_cluster_ind * 12 + 5] = 0.0f;
-    verts[vert_cluster_ind * 12 + 6] = el.in_dir.x;
-    verts[vert_cluster_ind * 12 + 7] = el.in_dir.y;
-    verts[vert_cluster_ind * 12 + 8] = 0.0f;
-    verts[vert_cluster_ind * 12 + 9] = el.end_pos.x;
-    verts[vert_cluster_ind * 12 + 10] = el.end_pos.y;
-    verts[vert_cluster_ind * 12 + 11] = 0.0f;
-    vert_cluster_ind++;
+  if(out_bezier_){
+    verts = bezier_vert_data_[path_ind].verts;
+  }else{
+    auto vertices = multi_paths_data_[path_ind];
+    verts.resize(12 * vertices.size());
+    auto vert_cluster_ind = 0;
+    for(auto& el : vertices){
+      verts[vert_cluster_ind * 12] = el.start_pos.x;
+      verts[vert_cluster_ind * 12 + 1] = el.start_pos.y;
+      verts[vert_cluster_ind * 12 + 2] = 0.0f;
+      verts[vert_cluster_ind * 12 + 3] = el.out_dir.x;
+      verts[vert_cluster_ind * 12 + 4] = el.out_dir.y;
+      verts[vert_cluster_ind * 12 + 5] = 0.0f;
+      verts[vert_cluster_ind * 12 + 6] = el.in_dir.x;
+      verts[vert_cluster_ind * 12 + 7] = el.in_dir.y;
+      verts[vert_cluster_ind * 12 + 8] = 0.0f;
+      verts[vert_cluster_ind * 12 + 9] = el.end_pos.x;
+      verts[vert_cluster_ind * 12 + 10] = el.end_pos.y;
+      verts[vert_cluster_ind * 12 + 11] = 0.0f;
+      vert_cluster_ind++;
+    }
+    return true;
   }
-  return true;
 }
 
 ColorRenderData::ColorRenderData(const LayersInfo* data){
