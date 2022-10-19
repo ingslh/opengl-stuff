@@ -79,6 +79,7 @@ unsigned int VerticesRenderData::GetVertNumUsePathInd(unsigned int ind) const {
   else if(bezier_vert_data_.size()){
     return static_cast<unsigned int>(bezier_vert_data_[ind].verts.size());
   }
+  return 0;
 }
 
 
@@ -124,8 +125,8 @@ bool VerticesRenderData::ConverToOpenglVert(unsigned int path_ind, std::vector<f
       verts[vert_cluster_ind * 12 + 11] = 0.0f;
       vert_cluster_ind++;
     }
-    return true;
   }
+  return true;
 }
 
 ColorRenderData::ColorRenderData(const LayersInfo* data){
