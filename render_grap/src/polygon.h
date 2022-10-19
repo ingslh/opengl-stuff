@@ -2,11 +2,18 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include "transform.h"
+#include "earcut.hpp"
 
 enum EdgeRoundDir {
-  t_UnKown = 0,
-  t_Clockwise,
-  t_AntiClockwise
+  t_eUnKown = 0,
+  t_eClockwise,
+  t_eAntiClockwise
+};
+
+enum ContainerType{
+  t_cUnKown = 0,
+  t_cVector,
+  t_cLinkedList
 };
 
 struct Vertices {
@@ -28,9 +35,31 @@ struct Vertices {
   Vertices operator+(const Vertices rhs) { return Vertices(glm::vec2(this->pos.x + rhs.pos.x, this->pos.y + rhs.pos.y)); }
 };
 
+namespace mapbox {
+  namespace util {
+
+    template <>
+    struct nth<0, glm::vec2> {
+      inline static auto get(const glm::vec2 &t) {
+        return t.x;
+      };
+    };
+    template <>
+    struct nth<1, glm::vec2> {
+      inline static auto get(const glm::vec2 &t) {
+        return t.y;
+      };
+    };
+
+  } // namespace util
+} // namespace mapbox
+
+
+
+using Point = glm::vec2;
 class Polygon{
 public:
-  Polygon(const std::vector<glm::vec2>& vertices);
+  Polygon(const std::vector<glm::vec2>& vertices, ContainerType type = t_cVector);
   Polygon(Polygon* p_Parent, glm::vec2 a, glm::vec2 b, glm::vec2 c);
   Polygon(Polygon* p_Parnet, glm::vec2 a, glm::vec2 b);
   Polygon(Polygon* p_Parent, glm::vec2 a);
@@ -58,9 +87,12 @@ public:
   Vertices* getPoint(glm::vec2 point);
   Vertices* getPoint(unsigned position);
 
-  inline unsigned numPoints() { return vert_nums_; }
-  inline unsigned numChildren() { return children.size(); }
+  inline unsigned int numPoints() { return vert_nums_; }
+  inline unsigned int size(){return vert_nums_;}
+  inline unsigned int numChildren() { return children.size(); }
 
+  bool empty() {return vert_nums_ == 0;}
+  
   /**
   * Creates a new Point at location of p_Point->previous. Returns TRUE if Point already exists in Polygon.<br>
   * Insert allows for multiple copies of the same data point, unlike addPoint
@@ -70,22 +102,33 @@ public:
 
   //void SplitToConvex();
   //bool IsConvex()const { return is_convex_; }
-  bool isConvex(Vertices* active);
-  bool inTriangle(Vertices pointToCheck, Vertices earTip, Vertices earTipPlus, Vertices earTipMinus);
-  bool isEar(Vertices* active);
-
-
+  static bool isConvex(Vertices* active);
+  static bool inTriangle(Vertices pointToCheck, Vertices earTip, Vertices earTipPlus, Vertices earTipMinus);
+  static bool isEar(Vertices* active);
 
 protected:
   Vertices* head;
   std::vector<Polygon*> children;
-  unsigned int vert_nums_;
+  unsigned int vert_nums_ =0;
 
 private:
-  bool is_convex_;
+  std::vector<std::vector<Point>> vertices_;
   EdgeRoundDir edge_vec_dir_;
-  std::vector<glm::vec2> edges_;
-  std::vector<glm::vec2> ret_verts_;
-
   Polygon* parent_ = nullptr;
+};
+
+
+
+class PolygonArray{
+public:
+  PolygonArray(const std::vector<glm::vec2>& vert){
+    vertices_.emplace_back(vert);
+  }
+
+  std::vector<std::vector<Point>> getVertices() const {return vertices_;}
+
+  
+private:
+  std::vector<std::vector<Point>> vertices_;
+
 };

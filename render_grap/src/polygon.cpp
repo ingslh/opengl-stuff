@@ -1,5 +1,28 @@
 #include "polygon.h"
 
+
+Polygon::Polygon(const std::vector<glm::vec2>& vert, ContainerType type) :edge_vec_dir_(EdgeRoundDir::t_eClockwise) {
+  auto size = vert.size();
+  vert_nums_ = size;
+  if(type == ContainerType::t_cLinkedList){
+    head = new Vertices(vert[0]);
+    auto old = head;
+    for (auto ind = 1; ind < size; ind++) {
+      auto in_vert = new Vertices(vert[ind]);
+      old->next = in_vert;
+      in_vert->previous = old;
+      if (ind == size - 1) {
+        in_vert->next = head;
+        head->previous = in_vert;
+      }
+      old = in_vert;
+    }
+  }
+  else if(type == ContainerType::t_cVector){
+    vertices_.push_back(vert);
+  }
+}
+
 Polygon::Polygon(Polygon* p_Parent, glm::vec2 cur, glm::vec2 next, glm::vec2 pre){
   parent_ = p_Parent;
   Vertices* a = new Vertices(cur);
@@ -74,41 +97,6 @@ Polygon::~Polygon(){
     delete deleteMe;
     vert_nums_--;
   }
-}
-
-Polygon::Polygon(const std::vector<glm::vec2>& vert)
-:edge_vec_dir_(EdgeRoundDir::t_Clockwise){
-  //need to insrt value to draw bezier;
-
-  //save zhe edge vector and judge is convex or not
-  vert_nums_ = static_cast<unsigned int>(vert.size());
-  for(unsigned int i = 0; i < vert_nums_; i++){
-    glm::vec2 step_vec;
-    if( i != vert_nums_ -1)
-      step_vec = vert[i] - vert[i + 1];
-    else
-      step_vec = vert[i] - vert[0];
-    edges_.emplace_back(step_vec);
-  }
-  std::vector<unsigned int> unconvex_vert_list;
-  std::vector<unsigned int> convex_vert_list;
-  for(unsigned int i = 0; i < vert_nums_; i++){
-    glm::vec3 cross_ret;
-    if (i != vert_nums_ - 1) {
-      cross_ret = glm::cross(glm::vec3(edges_[i].x, edges_[i].y, 0), glm::vec3(edges_[i + 1].x, edges_[i + 1].y, 0));
-    }
-    else {
-      cross_ret = glm::cross(glm::vec3(edges_[i].x, edges_[i].y, 0), glm::vec3(edges_[0].x, edges_[0].y, 0));
-    }
-    if (cross_ret.z < 0){
-      is_convex_ = false;
-      unconvex_vert_list.emplace_back(i+1);
-    }else{
-      convex_vert_list.emplace_back(i+1);
-    }
-  }
-  if(unconvex_vert_list.empty())
-    is_convex_ = true;
 }
 
 bool Polygon::addChild(Polygon *child){
@@ -307,13 +295,16 @@ void Polygon::reverse(int pos) {
   } while (active != head);
 }
 
+typedef Vertices Vector;
 bool Polygon::isConvex(Vertices* active){
   auto pre = *active->previous;
   auto cur = *active;
   auto next = *active->next;
 
-  return (( pre.pos.x * (next.pos.y - cur.pos.y )) + 
-  (cur.pos.x * (pre.pos.y - next.pos.y )) + ( next.pos.x * (cur.pos.y - pre.pos.y ))) < 0; 
+  Vector vec1 = cur - pre;
+  Vector vec2 = next - cur;
+  auto cross_ret = glm::cross(glm::vec3(vec1.pos.x, vec1.pos.y, 0), glm::vec3(vec2.pos.x, vec2.pos.y, 0));
+  return cross_ret.z > 0;
 }
 
 typedef Vertices Vector;

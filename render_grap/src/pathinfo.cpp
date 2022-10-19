@@ -1,5 +1,7 @@
 #include "pathinfo.h"
 #include "polygon.h"
+#include "earcut.hpp"
+#include "bezier_generator.hpp"
 
 PathInfo::PathInfo(const nlohmann::json& json){
   shape_direction = json["Shape Direction"];
@@ -25,6 +27,10 @@ PathInfo::PathInfo(const nlohmann::json& json){
   }
 
   if(closed){
-    auto polygon = std::make_shared<Polygon>(vertices);
+    auto bezier_verts = std::make_shared<BezierGenerator>(vertices, out_pos_vec, in_pos_vec);
+    //auto bezier_test = bezier_verts -> getBezierVerts();
+    auto polygon = std::make_shared<PolygonArray>(bezier_verts->getBezierVerts());
+    //auto test = polygon->getVertices();
+    auto indices = mapbox::earcut<int>(polygon->getVertices());
   }
 }
