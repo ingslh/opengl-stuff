@@ -114,8 +114,8 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBOs[it->first]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * it->second[2], out_vert, GL_STATIC_DRAW);
 
-		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[it->first]);
-		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * tri_index.size(), indices, GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[it->first]);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * tri_index.size(), indices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
     glEnableVertexAttribArray(0);
@@ -141,13 +141,10 @@ int main()
 		shader.setMat4("view", view);
 		shader.setMat4("model", model);
 
-    /*for (unsigned int i = 0; i < paths_count; i++) {
+    for (unsigned int i = 0; i < paths_count; i++) {
       glBindVertexArray(VAOs[i]);
-      //glDrawArrays(GL_LINES_ADJACENCY, 0, 4 * paths_map[i][2]);
 			glDrawElements(GL_TRIANGLES, paths_map[i][3], GL_UNSIGNED_INT, 0);
-    }*/
-    glBindVertexArray(VAOs[1]);
-    glDrawElements(GL_TRIANGLES, paths_map[1][3], GL_UNSIGNED_INT, 0);
+    }
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		// -------------------------------------------------------------------------------
