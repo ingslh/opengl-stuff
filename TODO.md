@@ -50,10 +50,13 @@
 ---
 2022.10.21
 1. 在RenderLoop中加入帧率控制与时长的概念；
-2. transform要作为一种变换矩阵Uniform参数传递给顶点着色器，同时利用贝塞尔进行插值
+2. transform要作为一种变换矩阵Uniform参数传递给顶点着色器，同时利用贝塞尔进行插值(opacity的关键帧数据需传递给片段着色器)
 3. 多path之间的merge逻辑
 4. group下可能会包含多个group
-5. 创建
+5. 创建layerInfo时加入异常判断
+
+6. 抗锯齿
+7. 多线程下进行解析json，顶点、片段、transform
 ---
 
 
