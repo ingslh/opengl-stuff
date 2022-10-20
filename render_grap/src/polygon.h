@@ -126,7 +126,7 @@ public:
   }
 
   std::vector<std::vector<Point>> getVertices() const {return vertices_;}
-
+  void addBezierVert(const std::vector<glm::vec2>& vert) { vertices_.emplace_back(vert); }
   
 private:
   std::vector<std::vector<Point>> vertices_;

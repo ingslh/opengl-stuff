@@ -18,7 +18,8 @@ VerticesRenderData::VerticesRenderData(const LayersInfo* data, bool out_bezier):
 
   paths_count_ = 0;
   auto shape_groups = data->GetShapeGroup();
-  for(auto& group : shape_groups){
+  for (auto group_ind = 0; group_ind < shape_groups.size(); group_ind++) {
+    auto group = shape_groups[group_ind];
     auto paths = group->GetContents()->GetPaths();
     paths_count_ += paths.size();
     auto final_offset = group->GetTransform()->GetPosition() + shape_offset; 
@@ -130,7 +131,16 @@ bool VerticesRenderData::ConverToOpenglVert(unsigned int path_ind, std::vector<f
 }
 
 ColorRenderData::ColorRenderData(const LayersInfo* data){
-
+  fills_count_ = 0;
+  auto shape_groups = data->GetShapeGroup();
+  for(auto& group : shape_groups){
+    auto fills = group->GetContents()->GetFills();
+    fills_count_ += fills.size();
+    for(auto& fill : fills){
+      glm::vec4 fill_color = fill->GetColor();
+      multi_fills_data_.emplace_back(fill_color);
+    }
+  }
 }
 
 VerticesRenderData* RenderDataFactory::CreateVerticesData(const LayersInfo* layer){

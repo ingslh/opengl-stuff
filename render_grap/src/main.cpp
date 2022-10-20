@@ -64,20 +64,31 @@ int main()
   JsonReader reader("../test.json");
   unsigned int path_ind = 0;
   std::vector<VerticesRenderDataPtr> layers_path_data;
+  std::vector<ColorRenderDataPtr> layers_fill_data;
 
 	std::map<unsigned int, std::vector<unsigned int>> paths_map;//all_path_ind;{layer_ind, path_ind, vert_count}
+  std::map<unsigned int, glm::vec4> fills_map;//all_fill_ind; color
 
   auto layers_count = reader.getLayersCount();
   for (unsigned int i = 0; i < layers_count; i++) {
-    auto layer_contents_data = SRenderDataFactory::GetIns().CreateVerticesData(reader.GetLayersInfo(i).get());
-		layers_path_data.emplace_back(layer_contents_data);
+    auto layer_info = reader.GetLayersInfo(i).get();
 
-    auto path_count = layer_contents_data->GetPathsCount();//only in this layer
+    auto layer_contents_path = SRenderDataFactory::GetIns().CreateVerticesData(layer_info);
+		layers_path_data.emplace_back(layer_contents_path);
+
+    auto layer_contents_fill = SRenderDataFactory::GetIns().CreateColorData(layer_info);
+    layers_fill_data.emplace_back(layer_contents_fill);
+
+    auto path_count = layer_contents_path->GetPathsCount();
     for (unsigned int j = 0; j < path_count; j++, path_ind++) {
-      auto signal_path_verts_count = layer_contents_data->GetVertNumUsePathInd(j);
-			auto indices_count = layer_contents_data->GetTriangleIndexSize(j);
-			std::vector<unsigned int> tmp ={i, j, signal_path_verts_count, indices_count};
-			paths_map.emplace(path_ind, tmp);
+      auto signal_path_verts_count = layer_contents_path->GetVertNumUsePathInd(j);
+			auto indices_count = layer_contents_path->GetTriangleIndexSize(j);
+			std::vector<unsigned int> path_tmp ={i, j, signal_path_verts_count, indices_count};
+			paths_map.emplace(path_ind, path_tmp);
+
+      auto fill_color = layer_contents_fill->GetColor(j);
+      fills_map.emplace(path_ind, fill_color);
+
     }
   }
 	auto paths_count = path_ind;
@@ -141,7 +152,10 @@ int main()
 		shader.setMat4("view", view);
 		shader.setMat4("model", model);
 
+		auto timeValue = glfwGetTime();
+
     for (unsigned int i = 0; i < paths_count; i++) {
+      shader.setVec4("Color",fills_map[i]);
       glBindVertexArray(VAOs[i]);
 			glDrawElements(GL_TRIANGLES, paths_map[i][3], GL_UNSIGNED_INT, 0);
     }

@@ -58,9 +58,15 @@ private:
   bool out_bezier_ = true;
 };
 
+typedef glm::vec4 Color;
+
 class ColorRenderData : public BaseRenderData{
 public:
   ColorRenderData(const LayersInfo* layer);
+  Color GetColor(unsigned int ind) { return multi_fills_data_[ind]; }
+private:
+  unsigned int fills_count_;
+  std::vector<Color> multi_fills_data_;
 };
 
 

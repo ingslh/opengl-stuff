@@ -1,22 +1,17 @@
 #pragma once
 #include <nlohmann/json.hpp>
 #include <vector>
-
-struct Color4V{
-  float r;
-  float g;
-  float b;
-  unsigned int a;
-};
+#include <glm/glm.hpp>
 
 class FillInfo{
 public:
   FillInfo(const nlohmann::json& json);
+  glm::vec4 GetColor() const {return color;}
 
 private:
   unsigned int blend_mode;
   unsigned int composite;
   unsigned int fill_rule;
-  Color4V color;
+  glm::vec4 color;
   unsigned int opacity;
 };
