@@ -10,7 +10,7 @@ include_directories(
 AUX_SOURCE_DIRECTORY(src DIR_SRCS)
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall  -O3 -march=native -std=c++11 -static-libgcc")
-list(APPEND CMAKE_CXX_FLAGS "-std=c++14")
+list(APPEND CMAKE_CXX_FLAGS "-std=c++17")
 
 
 if(WIN32)

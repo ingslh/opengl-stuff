@@ -320,8 +320,10 @@
                   jObj[cur.name]["keyFrame" + j] = {
                     "keyValue": cur.keyValue(j),
                     "keyTime": cur.keyTime(j),
-                    "influence": cur.keyInTemporalEase(j)[0].influence,
-                    "speed": cur.keyInTemporalEase(j)[0].speed,
+                    "In influence": cur.keyInTemporalEase(j)[0].influence,
+                    "Out influence":cur.keyOutTemporalEase(j)[0].influence,
+                    "In speed": cur.keyInTemporalEase(j)[0].speed,
+                    "Out speed": cur.keyInTemporalEase(j)[0].speed,
                   };
                 }
               }else{

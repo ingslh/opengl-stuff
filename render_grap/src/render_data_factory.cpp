@@ -22,6 +22,8 @@ VerticesRenderData::VerticesRenderData(const LayersInfo* data, bool out_bezier):
     auto group = shape_groups[group_ind];
     auto paths = group->GetContents()->GetPaths();
     paths_count_ += paths.size();
+
+    auto test = group->GetTransform()->GetPosition();
     auto final_offset = group->GetTransform()->GetPosition() + shape_offset; 
 
     for(auto& path : paths) {

@@ -131,39 +131,61 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
     glEnableVertexAttribArray(0);
   }
+
+  glfwSwapInterval(1);// open the vertical synchronization
+  // draw points
+  shader.use();
+  glm::mat4 projection = glm::perspective(45.0f, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+  glm::mat4 view = camera.GetViewMatrix();
+  glm::mat4 model = glm::mat4(1.0f);
+  shader.setMat4("projection", projection);
+  shader.setMat4("view", view);
+  shader.setMat4("model", model);
 	
 	// draw in wireframe
   // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+  static double limitFPS = 1.0 / 60.0;
+  double lastTime = glfwGetTime(), timer = lastTime;
+  double deltaTime = 0, nowTime = 0;
+  int frames = 0, updates = 0;
+
 	// render loop
 	// -----------
 	while (!glfwWindowShouldClose(window))
 	{
-		// render
-		// ------
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // - Measure time
+    nowTime = glfwGetTime();
+    deltaTime += (nowTime - lastTime) / limitFPS;
+    lastTime = nowTime;
 
-		// draw points
-		shader.use();
-		glm::mat4 projection = glm::perspective(45.0f, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		glm::mat4 view = camera.GetViewMatrix();
-		glm::mat4 model = glm::mat4(1.0f);
-		shader.setMat4("projection", projection);
-		shader.setMat4("view", view);
-		shader.setMat4("model", model);
+    while (deltaTime >= 1.0) {
+      //update();   // - Update function
+      // render
+      // ------
+      glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		auto timeValue = glfwGetTime();
-
-    for (unsigned int i = 0; i < paths_count; i++) {
-      shader.setVec4("Color",fills_map[i]);
-      glBindVertexArray(VAOs[i]);
-			glDrawElements(GL_TRIANGLES, paths_map[i][3], GL_UNSIGNED_INT, 0);
+      for (unsigned int i = 0; i < paths_count; i++) {
+        shader.setVec4("Color", fills_map[i]);
+        glBindVertexArray(VAOs[i]);
+        glDrawElements(GL_TRIANGLES, paths_map[i][3], GL_UNSIGNED_INT, 0);
+      }
+      frames++;
+      updates++;
+      deltaTime--;
     }
 
-		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-		// -------------------------------------------------------------------------------
-		glfwSwapBuffers(window);
-		glfwPollEvents();
+    // - Reset after one second
+    if (glfwGetTime() - timer > 1.0) {
+      timer++;
+      std::cout << "FPS: " << frames << " Updates:" << updates << std::endl;
+      updates = 0, frames = 0;
+    }
+    // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+    // -------------------------------------------------------------------------------
+    glfwSwapBuffers(window);
+    glfwPollEvents();
 	}
 
 	// optional: de-allocate all resources once they've outlived their purpose:
