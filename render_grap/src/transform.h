@@ -24,7 +24,6 @@ struct Keyframe{
   float keyTime;
   std::vector<float> bezier_dirs;//influ, outinflu, inspeed, outspeed
 
-  template<typename T>
   Keyframe(T keyValue_, float keyTime_, std::vector<float> bezier_dirs_) :
     keyValue(keyValue_), keyTime(keyTime_), bezier_dirs(bezier_dirs_){}
 };

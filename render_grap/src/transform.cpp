@@ -20,8 +20,11 @@ void Transform::readKeyframeandProperty(const std::string& propname, const nlohm
   if (cur_property.is_number()) { // not have keyframe
     property_values_[propname] = cur_property;
   }
-  else if (cur_property.is_array() && cur_property.size() == 3) {
-    property_values_[propname] = glm::vec3(cur_property[0], cur_property[1], cur_property[2]);
+  else if (cur_property.is_array()) {
+    if(cur_property.size()==3)
+      property_values_[propname] = glm::vec3(cur_property[0], cur_property[1], cur_property[2]);
+    else
+      property_values_[propname] = glm::vec3(cur_property[0], cur_property[1],0);
   }
   else if(cur_property.is_object()){ //have keyframe ,it's object
     if (keyvalue_is_vector)
