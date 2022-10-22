@@ -50,7 +50,7 @@ public:
   MultiPathsData& GetMultiPathsData(){return multi_paths_data_;}
   bool GetOutBezier() const{return out_bezier_;}
   std::vector<unsigned int> GetTriangleIndex(int ind) const {return bezier_vert_data_[ind].tri_index;}
-  unsigned int GetTriangleIndexSize(unsigned int ind) const {return bezier_vert_data_[ind].tri_index.size();}
+  unsigned int GetTriangleIndexSize(unsigned int ind) const {return static_cast<unsigned int>(bezier_vert_data_[ind].tri_index.size());}
 private:
   MultiPathsData multi_paths_data_;
   std::vector<BezierVertData> bezier_vert_data_;

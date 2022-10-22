@@ -21,9 +21,8 @@ VerticesRenderData::VerticesRenderData(const LayersInfo* data, bool out_bezier):
   for (auto group_ind = 0; group_ind < shape_groups.size(); group_ind++) {
     auto group = shape_groups[group_ind];
     auto paths = group->GetContents()->GetPaths();
-    paths_count_ += paths.size();
+    paths_count_ += static_cast<unsigned int>(paths.size());
 
-    auto test = group->GetTransform()->GetPosition();
     auto final_offset = group->GetTransform()->GetPosition() + shape_offset; 
 
     for(auto& path : paths) {
@@ -137,7 +136,7 @@ ColorRenderData::ColorRenderData(const LayersInfo* data){
   auto shape_groups = data->GetShapeGroup();
   for(auto& group : shape_groups){
     auto fills = group->GetContents()->GetFills();
-    fills_count_ += fills.size();
+    fills_count_ += static_cast<unsigned int>(fills.size());
     for(auto& fill : fills){
       glm::vec4 fill_color = fill->GetColor();
       multi_fills_data_.emplace_back(fill_color);

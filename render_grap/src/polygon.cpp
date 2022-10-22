@@ -3,7 +3,7 @@
 
 Polygon::Polygon(const std::vector<glm::vec2>& vert, ContainerType type) :edge_vec_dir_(EdgeRoundDir::t_eClockwise) {
   auto size = vert.size();
-  vert_nums_ = size;
+  vert_nums_ = static_cast<unsigned int>(size);
   if(type == ContainerType::t_cLinkedList){
     head = new Vertices(vert[0]);
     auto old = head;
@@ -176,7 +176,7 @@ bool Polygon::removeVert(unsigned int ind) {
   if (ind > vert_nums_ || vert_nums_ == 0) return false;
   Vertices* find = head;
 
-  for (int i = 0; i < ind; i++)
+  for (unsigned int i = 0; i < ind; i++)
     find = find->next;
 
   find->previous->next = find->next;
@@ -253,7 +253,7 @@ Vertices* Polygon::getPoint(glm::vec2 vert) {
 bool Polygon::insertPoint(glm::vec2 vert, Vertices* p_Point) {
   if (!p_Point) return false;
   Vertices* find = head;
-  for (auto i = 0; i < vert_nums_; i++) {
+  for (unsigned int i = 0; i < vert_nums_; i++) {
     if (find->pos.x == p_Point->pos.x && find->pos.y == p_Point->pos.y)
       break;
     find = find -> next;

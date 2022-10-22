@@ -89,7 +89,7 @@ public:
 
   inline unsigned int numPoints() { return vert_nums_; }
   inline unsigned int size(){return vert_nums_;}
-  inline unsigned int numChildren() { return children.size(); }
+  inline unsigned int numChildren() { return static_cast<unsigned int>(children.size()); }
 
   bool empty() {return vert_nums_ == 0;}
   
