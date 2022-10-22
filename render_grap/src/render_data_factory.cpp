@@ -23,10 +23,10 @@ bool RenderDataFactory::ReleaseRenderData(BaseRenderData* data){
 
   switch (data->GetType())
   {
-  case rDataType::tVERT_DATA:
+  case rDataType::tVerticesData:
     SafeDelete<VerticesRenderData>(data);
     break;
-  case rDataType::tCOLOR_DATA:
+  case rDataType::tColorData:
     SafeDelete<ColorRenderData>(data);
   default:
     return false;

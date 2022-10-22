@@ -30,16 +30,18 @@ struct Keyframe{
 
 typedef std::vector<Keyframe<glm::vec3>> VectorKeyFrames;
 typedef std::vector<Keyframe<float>> ScalarKeyFrames;
+typedef std::map<std::string, std::variant<VectorKeyFrames, ScalarKeyFrames>> KeyframesMap;
 
 class Transform{
 public:
   Transform(const nlohmann::json& transform);
   glm::vec3 GetShapeGrapOffset();
   glm::vec3& GetPosition(){return std::get<t_Vector>(property_values_["Position"]);}
+  KeyframesMap& GetKeyframeData(){return keyframe_data_;}
 
 protected:
   void readKeyframeandProperty(const std::string& propname, const nlohmann::json& transform);
 private:
   std::map<std::string, std::variant<glm::vec3, float>> property_values_;
-  std::map<std::string, std::variant<VectorKeyFrames, ScalarKeyFrames>> keyframe_data_;
+  KeyframesMap keyframe_data_;
 };

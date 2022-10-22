@@ -2,9 +2,10 @@
 #include <mutex>
 
 enum rDataType{
-  tNONE_DATA = 0,
-  tVERT_DATA,
-  tCOLOR_DATA,
+  tNoneData = 0,
+  tVerticesData,
+  tColorData,
+  tTransformData,
 }; 
 
 class BaseRenderData{

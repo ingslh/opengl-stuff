@@ -3,6 +3,7 @@
 #include "pathinfo.h"
 #include "vertices_render_data.hpp"
 #include "color_render_data.hpp"
+#include "transform_render_data.hpp"
 
 class RenderDataFactory{
 public:
@@ -10,8 +11,9 @@ public:
   virtual ~RenderDataFactory(){};//auto call derived class destructor func
 
 public:
-  VerticesRenderData *CreateVerticesData(const LayersInfo* layer);
-  ColorRenderData *CreateColorData(const LayersInfo* layer);
+  VerticesRenderData* CreateVerticesData(const LayersInfo* layer);
+  ColorRenderData* CreateColorData(const LayersInfo* layer);
+  TransformRenderData* CreateTransformData(const LayersInfo* layer);
   bool ReleaseRenderData(BaseRenderData* data);
 };
 
@@ -40,6 +42,12 @@ public:
 
   ColorRenderDataPtr CreateColorData(const LayersInfo* layer){
     return ColorRenderDataPtr(render_data_factory_->CreateColorData(layer), [=](ColorRenderData *data){
+      render_data_factory_->ReleaseRenderData(data);
+    });
+  }
+
+  TransformRenderDataPtr CreateTransformData(const LayersInfo* layer){
+    return TransformRenderDataPtr(render_data_factory_->CreateTransformData(layer),[=](TransformRenderData* data){
       render_data_factory_->ReleaseRenderData(data);
     });
   }
