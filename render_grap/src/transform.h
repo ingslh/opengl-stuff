@@ -20,12 +20,15 @@ enum PropertyOrKeyvalueType {
 
 template<typename T>
 struct Keyframe{
+  T lastkeyValue;
+  float lastkeyTime;
+  glm::vec2 outPos;
+  glm::vec2 inPos;
   T keyValue;
   float keyTime;
-  std::vector<float> bezier_dirs;//influ, outinflu, inspeed, outspeed
 
-  Keyframe(T keyValue_, float keyTime_, std::vector<float> bezier_dirs_) :
-    keyValue(keyValue_), keyTime(keyTime_), bezier_dirs(bezier_dirs_){}
+  Keyframe(T lastkeyValue_, float lastkeyTime_, glm::vec2 outPos_, glm::vec2 inPos_, T keyValue_, float keyTime_) :
+    lastkeyValue(lastkeyValue_), lastkeyTime(lastkeyTime_), outPos(outPos_), inPos(inPos_), keyValue(keyValue_), keyTime(keyTime_){}
 };
 
 typedef std::vector<Keyframe<glm::vec3>> VectorKeyFrames;
