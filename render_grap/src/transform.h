@@ -22,12 +22,12 @@ template<typename T>
 struct Keyframe{
   T lastkeyValue;
   float lastkeyTime;
-  glm::vec2 outPos;
-  glm::vec2 inPos;
+  std::vector<glm::vec2> outPos;
+  std::vector<glm::vec2> inPos;
   T keyValue;
   float keyTime;
 
-  Keyframe(T lastkeyValue_, float lastkeyTime_, glm::vec2 outPos_, glm::vec2 inPos_, T keyValue_, float keyTime_) :
+  Keyframe(T lastkeyValue_, float lastkeyTime_, std::vector<glm::vec2> outPos_, std::vector<glm::vec2> inPos_, T keyValue_, float keyTime_) :
     lastkeyValue(lastkeyValue_), lastkeyTime(lastkeyTime_), outPos(outPos_), inPos(inPos_), keyValue(keyValue_), keyTime(keyTime_){}
 };
 
@@ -37,7 +37,7 @@ typedef std::map<std::string, std::variant<VectorKeyFrames, ScalarKeyFrames>> Ke
 
 class Transform{
 public:
-  Transform(const nlohmann::json& transform);
+  Transform(const nlohmann::json& transform, bool IsShapeTransform = false);
   glm::vec3 GetShapeGrapOffset();
   glm::vec3& GetPosition(){return std::get<t_Vector>(property_values_["Position"]);}
   KeyframesMap& GetKeyframeData(){return keyframe_data_;}
@@ -45,6 +45,8 @@ public:
 protected:
   void readKeyframeandProperty(const std::string& propname, const nlohmann::json& transform);
 private:
+  bool IsVectorProperty(std::string);
+
   std::map<std::string, std::variant<glm::vec3, float>> property_values_;
   KeyframesMap keyframe_data_;
 };

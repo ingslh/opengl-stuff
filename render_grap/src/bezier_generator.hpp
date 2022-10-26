@@ -37,8 +37,8 @@ public:
         bezier_verts_.emplace_back(it.start);
       }
       else{ //need to generate bezier
-        auto delta = 1.0/float(segments_);
-        for(unsigned int i = 0; i < segments_; i++){
+        auto delta = 1.0/float(default_segments_);
+        for(unsigned int i = 0; i < default_segments_; i++){
           float t = static_cast<float>(delta * float(i));
           vec2 p;
           p.x = (1 - t) * (1 - t) * (1 - t) * it.start.x + 3 * t * (1 - t) * (1 - t)* it.out.x + 3 * t*t* (1 - t)* it.in.x + t * t * t * it.end.x;
@@ -49,9 +49,43 @@ public:
     }
   }
 
+  BezierGenerator(const vec2& lastPos, const vec2& outPos, const vec2& inPos, const vec2& curPos, unsigned int segments, unsigned int start){
+    for (unsigned int i = start; i <= segments + start; i++) {
+      std::vector<float> ret;
+      std::vector<float> elements;
+      elements.emplace_back(curPos.x - 3 * inPos.x + 3 * outPos.x - lastPos.x);
+      elements.emplace_back(3 * inPos.x - 6 * outPos.x + 3 * lastPos.x);
+      elements.emplace_back(3 * outPos.x - 3 * lastPos.x);
+      elements.emplace_back(lastPos.x - i);
+      CubicPolynomial(0, 1, elements, ret);
+      if (ret.size() == 1) {
+        auto t = ret[0];
+        auto p = (1 - t) * (1 - t) * (1 - t) * lastPos.y + 3 * t * (1 - t) * (1 - t)* outPos.y + 3 * t*t* (1 - t)* inPos.y + t * t * t * curPos.y;
+        keyframe_curve_.emplace_back(glm::vec2(i, p));
+      }
+    }
+  }
+
+
   std::vector<vec2> getBezierVerts() const {return bezier_verts_;}
+  std::vector<vec2> getKeyframeCurve() const {return keyframe_curve_;}
 
 private:
+  void CubicPolynomial(float l, float r, const std::vector<float>& elements, std::vector<float>& ret) {
+    auto a = elements[0], b = elements[1], c = elements[2], d = elements[3];
+    auto f = [a, b, c, d](float x)->float {
+      return ((a*x + b)*x + c)*x + d;
+    };
+    if (f(l)*f(r) > 0 && ((r - 1) < 1)) return;
+    float mid = (l + r) / 2;
+    if (f(mid) <= 1e-4 && f(mid) >= -1e-4) {
+      ret.emplace_back(round(mid * pow(10,3)) * pow(10,-3));
+      return;
+    }
+    CubicPolynomial(l, mid, elements, ret), CubicPolynomial(mid, r, elements, ret);
+  }
+
   std::vector<vec2> bezier_verts_;
-  unsigned int segments_ = 10;
+  std::vector<vec2> keyframe_curve_;
+  unsigned int default_segments_ = 10;
 };

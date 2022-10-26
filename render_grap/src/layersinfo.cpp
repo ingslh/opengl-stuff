@@ -10,7 +10,7 @@ LayersInfo::LayersInfo(const nlohmann::json& layer){
   startTime = layer["startTime"];
   outPoint = layer["outPoint"];
   inPoint = layer["inPoint"];
-  transform = std::make_shared<Transform>(layer["Transform"]);
+  transform = std::make_shared<Transform>(layer["Transform"],true);
   auto contents = layer["Contents"].items();
   for(auto& el : contents){
     groups.emplace_back(std::make_shared<ShapeGroup>(el.value()));
