@@ -35,6 +35,14 @@ typedef std::vector<Keyframe<glm::vec3>> VectorKeyFrames;
 typedef std::vector<Keyframe<float>> ScalarKeyFrames;
 typedef std::map<std::string, std::variant<VectorKeyFrames, ScalarKeyFrames>> KeyframesMap;
 
+struct TransMat{
+  unsigned int layer_index;
+  float clip_start;
+  float clip_end;
+  std::vector<glm::mat4> trans;
+  float duration;
+};
+
 class Transform{
 public:
   Transform(const nlohmann::json& transform, bool IsShapeTransform = false);

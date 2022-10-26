@@ -30,6 +30,7 @@ Transform::Transform(const nlohmann::json& transform, bool IsShapeTransform){
         auto curve_x = generator_x.getKeyframeCurve();
         BezierGenerator generator_y(lastPos_y, outPos_x, inPos_x, curPos_x, bezier_duration, start);
         auto curve_y = generator_y.getKeyframeCurve();
+        start += curve_x.size(); 
       }
     }
     else {
