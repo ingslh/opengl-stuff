@@ -61,6 +61,10 @@
 
 8. 处理项目构建问题（CMake）支持多端
 
+---
+2022.10.27
+1. transform要分成两个子类，ShapeTransform 、GroupTransform；
+2. 考虑layer的长度与总的动画的长度不一致的问题；
 
 
 
