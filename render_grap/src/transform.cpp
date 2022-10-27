@@ -1,6 +1,7 @@
 #include "transform.h"
 #include "json_data_manager.h"
 #include "bezier_generator.hpp"
+#include <glm/gtc/matrix_transform.hpp>
 
 Transform::Transform(const nlohmann::json& transform, bool IsShapeTransform){
 
@@ -8,15 +9,16 @@ Transform::Transform(const nlohmann::json& transform, bool IsShapeTransform){
   for (auto& el : transform.items()) {
     readKeyframeandProperty(el.key(),el.value());
   }
+  type_ = IsShapeTransform ? t_ShapeTrans : t_GroupTrans;
   if (!IsShapeTransform) return;
 
   //2.generate bezier curve data
   for (auto it = keyframe_data_.begin(); it != keyframe_data_.end(); it++) {
     if (IsVectorProperty(it->first)) {
       auto vector_keyframes = std::get<0>(it->second);
-      auto start_value = std::get<0>(property_values_[it->first]);
+      auto start_value = vector_keyframes[0].lastkeyValue;
       auto start = vector_keyframes.front().lastkeyTime;
-      std::vector<std::vector<glm::vec2>> double_curve_line;
+      std::vector<std::map<unsigned int, float>> double_curve_line;
       double_curve_line.resize(2);
 
       for (auto& keyframe : vector_keyframes) {
@@ -29,18 +31,22 @@ Transform::Transform(const nlohmann::json& transform, bool IsShapeTransform){
         glm::vec2 inPos_y(keyframe.inPos[1].x, keyframe.inPos[1].y);
         glm::vec2 curPos_x(keyframe.keyTime, keyframe.keyValue.x);
         glm::vec2 curPos_y(keyframe.keyTime, keyframe.keyValue.y);
-        BezierGenerator generator_x(lastPos_x, outPos_x, inPos_x, curPos_x, bezier_duration, start, start_value.x);
-        auto curve_x = generator_x.getKeyframeCurve();
-        BezierGenerator generator_y(lastPos_y, outPos_x, inPos_x, curPos_x, bezier_duration, start, start_value.y);
-        auto curve_y = generator_y.getKeyframeCurve();
-        start += curve_x.size(); 
+        BezierGenerator generator_x(lastPos_x, outPos_x, inPos_x, curPos_x, bezier_duration, static_cast<unsigned int>(start), start_value.x);
+        auto curve_x = generator_x.getKeyframeCurveMap();
+        BezierGenerator generator_y(lastPos_y, outPos_y, inPos_y, curPos_y, bezier_duration, static_cast<unsigned int>(start), start_value.y);
+        auto curve_y = generator_y.getKeyframeCurveMap();
+        start += static_cast<unsigned int>(curve_x.size()); 
+        double_curve_line[0].merge(curve_x);
+        double_curve_line[1].merge(curve_y);
       }
+      transform_curve_[it->first] = double_curve_line;
     }
     else {
       auto scalar_keyframes = std::get<1>(it->second);
-      auto start_value = std::get<1>(property_values_[it->first]);
-      unsigned int start = scalar_keyframes.front().lastkeyTime;
-      std::vector<std::vector<glm::vec2>> signal_curve_line;
+      auto start_value = scalar_keyframes[0].lastkeyValue;
+      unsigned int start = static_cast<unsigned int>(scalar_keyframes.front().lastkeyTime);
+      std::vector<std::map<unsigned int, float>> signal_curve_line;
+
       signal_curve_line.resize(1);
 
       for (auto& keyframe : scalar_keyframes) {
@@ -50,16 +56,14 @@ Transform::Transform(const nlohmann::json& transform, bool IsShapeTransform){
         glm::vec2 inPos(keyframe.inPos[0]);
         glm::vec2 outPos(keyframe.outPos[0]);
         BezierGenerator generator(lastPos, outPos, inPos, curPos, bezier_duration, start, start_value);
-        auto curve = generator.getKeyframeCurve();
-        start += curve.size();
+        auto curve = generator.getKeyframeCurveMap();
+        start += static_cast<unsigned int>(curve.size());
 
-        signal_cur_line[0].insert(signal_curve_line[0].end(), curve.begin(), curve.end());
+        signal_curve_line[0].merge(curve);//cpp17 support,if old cpp verison can use "signal_curve_line[0].insert(curve.begin(),curve.end());" 
       }
+      transform_curve_[it->first] = signal_curve_line;
     }
   }
-
-  //3.generate transform mat
-  
 }
 
 //note: group's transform vector is 2D, and shape's transform vector is 3D
@@ -83,9 +87,9 @@ void Transform::readKeyframeandProperty(const std::string& propname, const nlohm
   }
   else if(cur_property.is_object()){ //have keyframe ,it's object
     if (keyvalue_is_vector)
-      property_values_[propname] = glm::vec3(cur_property["value"][0], cur_property["value"][1], cur_property["value"][2]);
+      property_values_[propname] = glm::vec3(cur_property["Curve1"]["lastkeyValue"][0], cur_property["Curve1"]["lastkeyValue"][1], cur_property["Curve1"]["lastkeyValue"][2]);
     else
-      property_values_[propname] = cur_property["value"];
+      property_values_[propname] = cur_property["Curve1"]["lastkeyValue"];
     VectorKeyFrames vector_keyframe;
     ScalarKeyFrames scalar_keyframe;
     auto frameRate = JsonDataManager::GetIns().GetFrameRate();
@@ -101,11 +105,20 @@ void Transform::readKeyframeandProperty(const std::string& propname, const nlohm
         auto vector_lastkeyvalue = glm::vec3(lastkeyValue[0], lastkeyValue[1], lastkeyValue[2]);
         auto vector_keyvalue = glm::vec3(keyValue[0], keyValue[1], keyValue[2]);
 
-        float out_x = (keyTime - lastkeyTime) * static_cast<float>(it.value()["OutPos"]["x"]) + lastkeyTime;
-        auto out_y = (vector_keyvalue - vector_lastkeyvalue) * static_cast<float>(it.value()["OutPos"]["y"]) + vector_lastkeyvalue;
-
-        float in_x = (keyTime - lastkeyTime) * static_cast<float>(it.value()["InPos"]["x"]) + lastkeyTime;
-        auto in_y = (vector_keyvalue - vector_lastkeyvalue) * static_cast<float>(it.value()["InPos"]["y"]) + vector_lastkeyvalue;
+        float out_x, in_x;
+        glm::vec3 out_y, in_y;
+        if (it.value()["OutPos"]["x"].is_number() && it.value()["OutPos"]["y"].is_number()) {
+          out_x = (keyTime - lastkeyTime) * static_cast<float>(it.value()["OutPos"]["x"]) + lastkeyTime;
+          out_y = (vector_keyvalue - vector_lastkeyvalue) * static_cast<float>(it.value()["OutPos"]["y"]) + vector_lastkeyvalue;
+          in_x = (keyTime - lastkeyTime) * static_cast<float>(it.value()["InPos"]["x"]) + lastkeyTime;
+          in_y = (vector_keyvalue - vector_lastkeyvalue) * static_cast<float>(it.value()["InPos"]["y"]) + vector_lastkeyvalue;
+        }
+        else {
+          out_x = (keyTime - lastkeyTime) * static_cast<float>(it.value()["OutPos"]["x"][0]) + lastkeyTime;
+          out_y = (vector_keyvalue - vector_lastkeyvalue) * static_cast<float>(it.value()["OutPos"]["y"][0]) + vector_lastkeyvalue;
+          in_x = (keyTime - lastkeyTime) * static_cast<float>(it.value()["InPos"]["x"][0]) + lastkeyTime;
+          in_y = (vector_keyvalue - vector_lastkeyvalue) * static_cast<float>(it.value()["InPos"]["y"][0]) + vector_lastkeyvalue;
+        }
 
         std::vector<glm::vec2> outpos_list, inpos_list;
         outpos_list.emplace_back(glm::vec2(out_x, out_y.x));
@@ -141,6 +154,38 @@ void Transform::readKeyframeandProperty(const std::string& propname, const nlohm
     return;
 }
 
+void Transform::GenerateTransformMat() {
+  auto frame_lenth = transform_mat_.clip_end - transform_mat_.clip_start + 1;
+  for (auto i = 0; i < frame_lenth; i++) {
+    glm::mat4 trans = glm::mat4(1.0f);
+    if (transform_curve_.count("Position") && transform_curve_["Position"][0].count(i) && transform_curve_["Position"][1].count(i)) {
+      auto offset_x = transform_curve_["Position"][0][i];
+      auto offset_y = transform_curve_["Position"][1][i];
+      trans = glm::translate(trans, glm::vec3(offset_x, offset_y, 0));
+    }
+
+    if (transform_curve_.count("Rotation") && transform_curve_["Rotation"][0].count(i)) {
+      auto rot = transform_curve_["Rotation"][0][i];
+      trans = glm::rotate(trans, glm::radians(rot), glm::vec3(0.0, 0.0, 1.0));
+    }
+
+    if (transform_curve_.count("Scale") && transform_curve_["Scale"][0].count(i) && transform_curve_["Scale"][1].count(i)) {
+      auto scale_x = transform_curve_["Scale"][0][i];
+      auto scale_y = transform_curve_["Scale"][1][i];
+      trans = glm::scale(trans, glm::vec3(scale_x / 100, scale_y / 100, 1.0));
+    }
+    transform_mat_.trans.emplace_back(trans);
+  }
+}
+
 bool Transform::IsVectorProperty(std::string str) {
   return (str == "Anchor Point" || str == "Position" || str == "Scale");
+}
+
+void Transform::SetInandOutPos(unsigned int ind, float in_pos, float out_pos) {
+  transform_mat_.layer_index = ind;
+  auto frameRate = JsonDataManager::GetIns().GetFrameRate();
+  auto duration = JsonDataManager::GetIns().GetDuration();
+  transform_mat_.clip_start = in_pos * frameRate < 0 ? 0 : in_pos * frameRate;
+  transform_mat_.clip_end = out_pos > duration  ? duration * frameRate : out_pos * frameRate;
 }

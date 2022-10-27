@@ -1,6 +1,12 @@
 #pragma once
 #include <nlohmann/json.hpp>
 
+struct LayerBaseInfo {
+  unsigned int index;
+  float in_pos;
+  float out_pos;
+};
+
 class JsonDataManager{
 public:
   static JsonDataManager& GetIns();
@@ -10,6 +16,7 @@ public:
   unsigned int GetFrameRate(){return frame_rate_;}
   unsigned int GetDuration(){return duration_;}
   unsigned int GetLayersNum(){return layers_num_;}
+  void AddLayerBaseInfo(unsigned int ind, float in_pos, float out_pos);
 
 private:
   unsigned int width_;
@@ -17,4 +24,5 @@ private:
   unsigned int frame_rate_;
   unsigned int duration_;
   unsigned int layers_num_;
+  std::vector<LayerBaseInfo> layers_base_info_;
 };

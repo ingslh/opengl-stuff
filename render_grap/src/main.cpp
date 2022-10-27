@@ -66,7 +66,7 @@ int main()
   std::vector<VerticesRenderDataPtr> layers_path_data;
   std::vector<ColorRenderDataPtr> layers_fill_data;
 
-	std::map<unsigned int, std::vector<unsigned int>> paths_map;//all_path_ind;{layer_ind, path_ind, vert_count}
+	std::map<unsigned int, std::vector<unsigned int>> paths_map;//all_path_ind;{layer_ind, path_ind, vert_count, triangle_count}
   std::map<unsigned int, glm::vec4> fills_map;//all_fill_ind; color
 
   auto layers_count = reader.getLayersCount();
@@ -78,6 +78,7 @@ int main()
 
     auto layer_contents_fill = SRenderDataFactory::GetIns().CreateColorData(layer_info);
     layers_fill_data.emplace_back(layer_contents_fill);
+
 
     auto path_count = layer_contents_path->GetPathsCount();
     for (unsigned int j = 0; j < path_count; j++, path_ind++) {
@@ -148,7 +149,7 @@ int main()
   static double limitFPS = 1.0 / 60.0;
   double lastTime = glfwGetTime(), timer = lastTime;
   double deltaTime = 0, nowTime = 0;
-  int frames = 0, updates = 0;
+  int frames = 0, played_frames = 0;;
 
 	// render loop
 	// -----------
@@ -159,28 +160,25 @@ int main()
     deltaTime += (nowTime - lastTime) / limitFPS;
     lastTime = nowTime;
 
-    while (deltaTime >= 1.0) {
-      //update();   // - Update function
-      // render
-      // ------
+    while (deltaTime >= 1.0) { // render
       glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       for (unsigned int i = 0; i < paths_count; i++) {
         shader.setVec4("Color", fills_map[i]);
+        //shader.setMat4("Transform", transforms_mat[i][played_frames]); //
         glBindVertexArray(VAOs[i]);
         glDrawElements(GL_TRIANGLES, paths_map[i][3], GL_UNSIGNED_INT, 0);
       }
       frames++;
-      updates++;
       deltaTime--;
     }
 
     // - Reset after one second
     if (glfwGetTime() - timer > 1.0) {
       timer++;
-      std::cout << "FPS: " << frames << " Updates:" << updates << std::endl;
-      updates = 0, frames = 0;
+      std::cout << "FPS: " << frames  << std::endl;
+      frames = 0;
     }
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
     // -------------------------------------------------------------------------------

@@ -13,6 +13,11 @@ enum TransformProp {
   k_Opacity,
 };
 
+enum TransformType {
+  t_ShapeTrans = 0,
+  t_GroupTrans,
+};
+
 enum PropertyOrKeyvalueType {
   t_Vector = 0,
   t_Scalar,
@@ -46,15 +51,23 @@ struct TransMat{
 class Transform{
 public:
   Transform(const nlohmann::json& transform, bool IsShapeTransform = false);
+
+  void SetInandOutPos(unsigned int ind, float in_pos, float out_pos);
+  void GenerateTransformMat();
+
   glm::vec3 GetShapeGrapOffset();
-  glm::vec3& GetPosition(){return std::get<t_Vector>(property_values_["Position"]);}
-  KeyframesMap& GetKeyframeData(){return keyframe_data_;}
+  glm::vec3& GetPosition() { return std::get<t_Vector>(property_values_["Position"]); }
+  KeyframesMap& GetKeyframeData() { return keyframe_data_; }
+  TransMat& GetTransMat(){return transform_mat_;}
 
 protected:
   void readKeyframeandProperty(const std::string& propname, const nlohmann::json& transform);
 private:
   bool IsVectorProperty(std::string);
 
+  TransformType type_;
   std::map<std::string, std::variant<glm::vec3, float>> property_values_;
   KeyframesMap keyframe_data_;
+  TransMat transform_mat_;
+  std::map<std::string, std::vector<std::map<unsigned int, float>>> transform_curve_;
 };

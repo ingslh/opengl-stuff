@@ -62,7 +62,7 @@ public:
       if (ret.size() == 1) {
         auto t = ret[0];
         auto p = (1 - t) * (1 - t) * (1 - t) * lastPos.y + 3 * t * (1 - t) * (1 - t)* outPos.y + 3 * t*t* (1 - t)* inPos.y + t * t * t * curPos.y;
-        keyframe_curve_.emplace_back(glm::vec2(i, p - start_value));
+        keyframe_curve_.emplace_back(glm::vec2(i, round((p - start_value)*100)/100));
       }
     }
   }
@@ -70,6 +70,13 @@ public:
 
   std::vector<vec2> getBezierVerts() const {return bezier_verts_;}
   std::vector<vec2> getKeyframeCurve() const {return keyframe_curve_;}
+  std::map<unsigned int, float> getKeyframeCurveMap() const {
+    std::map<unsigned int, float> ret;
+    for (auto &el : keyframe_curve_) {
+      ret[static_cast<unsigned int>(el.x)] = el.y;
+    }
+    return ret;
+  }
 
 private:
   void CubicPolynomial(float l, float r, const std::vector<float>& elements, std::vector<float>& ret) {
