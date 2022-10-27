@@ -9,12 +9,15 @@ Transform::Transform(const nlohmann::json& transform, bool IsShapeTransform){
     readKeyframeandProperty(el.key(),el.value());
   }
   if (!IsShapeTransform) return;
+
   //2.generate bezier curve data
   for (auto it = keyframe_data_.begin(); it != keyframe_data_.end(); it++) {
     if (IsVectorProperty(it->first)) {
       auto vector_keyframes = std::get<0>(it->second);
       auto start_value = std::get<0>(property_values_[it->first]);
       auto start = vector_keyframes.front().lastkeyTime;
+      std::vector<std::vector<glm::vec2>> double_curve_line;
+      double_curve_line.resize(2);
 
       for (auto& keyframe : vector_keyframes) {
         unsigned int bezier_duration = static_cast<unsigned int>(keyframe.keyTime - keyframe.lastkeyTime);
@@ -26,9 +29,9 @@ Transform::Transform(const nlohmann::json& transform, bool IsShapeTransform){
         glm::vec2 inPos_y(keyframe.inPos[1].x, keyframe.inPos[1].y);
         glm::vec2 curPos_x(keyframe.keyTime, keyframe.keyValue.x);
         glm::vec2 curPos_y(keyframe.keyTime, keyframe.keyValue.y);
-        BezierGenerator generator_x(lastPos_x, outPos_x, inPos_x, curPos_x, bezier_duration, start);
+        BezierGenerator generator_x(lastPos_x, outPos_x, inPos_x, curPos_x, bezier_duration, start, start_value.x);
         auto curve_x = generator_x.getKeyframeCurve();
-        BezierGenerator generator_y(lastPos_y, outPos_x, inPos_x, curPos_x, bezier_duration, start);
+        BezierGenerator generator_y(lastPos_y, outPos_x, inPos_x, curPos_x, bezier_duration, start, start_value.y);
         auto curve_y = generator_y.getKeyframeCurve();
         start += curve_x.size(); 
       }
@@ -37,6 +40,8 @@ Transform::Transform(const nlohmann::json& transform, bool IsShapeTransform){
       auto scalar_keyframes = std::get<1>(it->second);
       auto start_value = std::get<1>(property_values_[it->first]);
       unsigned int start = scalar_keyframes.front().lastkeyTime;
+      std::vector<std::vector<glm::vec2>> signal_curve_line;
+      signal_curve_line.resize(1);
 
       for (auto& keyframe : scalar_keyframes) {
         unsigned int bezier_duration = static_cast<unsigned int>(keyframe.keyTime - keyframe.lastkeyTime);
@@ -44,9 +49,11 @@ Transform::Transform(const nlohmann::json& transform, bool IsShapeTransform){
         glm::vec2 curPos(keyframe.keyTime, keyframe.keyValue);
         glm::vec2 inPos(keyframe.inPos[0]);
         glm::vec2 outPos(keyframe.outPos[0]);
-        BezierGenerator generator(lastPos, outPos, inPos, curPos, bezier_duration, start);
-        auto curve = generator.getKeyframeCurve();//need to reduce start value
+        BezierGenerator generator(lastPos, outPos, inPos, curPos, bezier_duration, start, start_value);
+        auto curve = generator.getKeyframeCurve();
         start += curve.size();
+
+        signal_cur_line[0].insert(signal_curve_line[0].end(), curve.begin(), curve.end());
       }
     }
   }

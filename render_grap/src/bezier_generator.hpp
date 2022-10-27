@@ -49,7 +49,8 @@ public:
     }
   }
 
-  BezierGenerator(const vec2& lastPos, const vec2& outPos, const vec2& inPos, const vec2& curPos, unsigned int segments, unsigned int start){
+  BezierGenerator(const vec2& lastPos, const vec2& outPos, const vec2& inPos, const vec2& curPos, 
+                  unsigned int segments, unsigned int start, float start_value){
     for (unsigned int i = start; i <= segments + start; i++) {
       std::vector<float> ret;
       std::vector<float> elements;
@@ -61,7 +62,7 @@ public:
       if (ret.size() == 1) {
         auto t = ret[0];
         auto p = (1 - t) * (1 - t) * (1 - t) * lastPos.y + 3 * t * (1 - t) * (1 - t)* outPos.y + 3 * t*t* (1 - t)* inPos.y + t * t * t * curPos.y;
-        keyframe_curve_.emplace_back(glm::vec2(i, p));
+        keyframe_curve_.emplace_back(glm::vec2(i, p - start_value));
       }
     }
   }
