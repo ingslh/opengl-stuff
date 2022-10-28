@@ -8,9 +8,10 @@
 class TransformRenderData : public BaseRenderData{
 public:
   TransformRenderData(const LayersInfo* layer);
+  TransMat* GetTransMat(){return transform_mat_;}
 
 private:
-  std::map<int64_t, glm::mat4> transform_map_;
+  TransMat* transform_mat_;
   std::map<int64_t, unsigned int> opacity_map_;
 };
 

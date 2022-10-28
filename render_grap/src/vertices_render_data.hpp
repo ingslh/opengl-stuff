@@ -25,7 +25,7 @@ public:
   glm::vec2 NormalizeVec2(const glm::vec2& pos);
   glm::vec3 NormalizeVec3(const glm::vec3& pos);
   bool ConverToOpenglVert(unsigned int ind_path, std::vector<float>& vert_info);
-  unsigned int GetVertNumUsePathInd(unsigned int ind) const;
+  unsigned int GetVertNumByPathInd(unsigned int ind) const;
   unsigned int GetPathsCount() const {return paths_count_;}
   MultiPathsData& GetMultiPathsData(){return multi_paths_data_;}
   bool GetOutBezier() const{return out_bezier_;}

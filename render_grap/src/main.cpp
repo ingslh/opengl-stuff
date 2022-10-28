@@ -6,6 +6,7 @@
 #include "shader_g.h"
 #include "jsonreader.h"
 #include "render_data_factory.h"
+#include "render_content.hpp"
 
 #include <iostream>
 
@@ -63,11 +64,12 @@ int main()
 
   JsonReader reader("../test.json");
   unsigned int path_ind = 0;
+
   std::vector<VerticesRenderDataPtr> layers_path_data;
-  std::vector<ColorRenderDataPtr> layers_fill_data;
 
 	std::map<unsigned int, std::vector<unsigned int>> paths_map;//all_path_ind;{layer_ind, path_ind, vert_count, triangle_count}
   std::map<unsigned int, glm::vec4> fills_map;//all_fill_ind; color
+  std::vector<TransMat*> trans_mat_list;
 
   auto layers_count = reader.getLayersCount();
   for (unsigned int i = 0; i < layers_count; i++) {
@@ -77,12 +79,14 @@ int main()
 		layers_path_data.emplace_back(layer_contents_path);
 
     auto layer_contents_fill = SRenderDataFactory::GetIns().CreateColorData(layer_info);
-    layers_fill_data.emplace_back(layer_contents_fill);
+
+    auto layer_contents_trans = SRenderDataFactory::GetIns().CreateTransformData(layer_info);
+    trans_mat_list.emplace_back(layer_contents_trans->GetTransMat());
 
 
     auto path_count = layer_contents_path->GetPathsCount();
     for (unsigned int j = 0; j < path_count; j++, path_ind++) {
-      auto signal_path_verts_count = layer_contents_path->GetVertNumUsePathInd(j);
+      auto signal_path_verts_count = layer_contents_path->GetVertNumByPathInd(j);
 			auto indices_count = layer_contents_path->GetTriangleIndexSize(j);
 			std::vector<unsigned int> path_tmp ={i, j, signal_path_verts_count, indices_count};
 			paths_map.emplace(path_ind, path_tmp);
@@ -170,6 +174,10 @@ int main()
         glBindVertexArray(VAOs[i]);
         glDrawElements(GL_TRIANGLES, paths_map[i][3], GL_UNSIGNED_INT, 0);
       }
+
+      
+
+      
       frames++;
       deltaTime--;
     }

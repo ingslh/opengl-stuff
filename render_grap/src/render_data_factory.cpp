@@ -18,6 +18,10 @@ ColorRenderData* RenderDataFactory::CreateColorData(const LayersInfo* layer){
   return new ColorRenderData(layer);
 }
 
+TransformRenderData* RenderDataFactory::CreateTransformData(const LayersInfo* layer){
+  return new TransformRenderData(layer);
+}
+
 bool RenderDataFactory::ReleaseRenderData(BaseRenderData* data){
   if(!data) return false;
 
@@ -28,6 +32,8 @@ bool RenderDataFactory::ReleaseRenderData(BaseRenderData* data){
     break;
   case rDataType::tColorData:
     SafeDelete<ColorRenderData>(data);
+  case rDataType::tTransformData:
+    SafeDelete<TransformRenderData>(data);
   default:
     return false;
   }

@@ -65,7 +65,7 @@ VerticesRenderData::VerticesRenderData(const LayersInfo* data, bool out_bezier):
   }
 }
 
-unsigned int VerticesRenderData::GetVertNumUsePathInd(unsigned int ind) const { 
+unsigned int VerticesRenderData::GetVertNumByPathInd(unsigned int ind) const { 
   if(multi_paths_data_.size()){
     return static_cast<unsigned int>(multi_paths_data_[ind].size()); 
   }

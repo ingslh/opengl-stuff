@@ -58,7 +58,7 @@ public:
   glm::vec3 GetShapeGrapOffset();
   glm::vec3& GetPosition() { return std::get<t_Vector>(property_values_["Position"]); }
   KeyframesMap& GetKeyframeData() { return keyframe_data_; }
-  TransMat& GetTransMat(){return transform_mat_;}
+  TransMat* GetTransMat(){return &transform_mat_;}
 
 protected:
   void readKeyframeandProperty(const std::string& propname, const nlohmann::json& transform);
