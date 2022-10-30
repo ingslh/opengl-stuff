@@ -51,6 +51,14 @@ public:
     for(auto content : contents){
       count += content->paths_num;
     }
+
+    unsigned int* VBOs = new unsigned int[count];
+    unsigned int* VAOs = new unsigned int[count];
+	  unsigned int* EBOs = new unsigned int[count];
+    glGenBuffers(count, VBOs);
+	  glGenBuffers(count, EBOs);
+    glGenVertexArrays(count, VAOs);
+
     return count;
   }
 
@@ -64,6 +72,7 @@ public:
       for(auto j = 0; j < layer_data.paths_num; j++){
         glm::vec4 color = layer_data.color[j];
         //send color to shader as uniform
+        std::vector<float> vert= layer_data.vert[j];
       }
     }
   }
