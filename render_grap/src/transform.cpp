@@ -161,7 +161,7 @@ void Transform::GenerateTransformMat() {
     if (transform_curve_.count("Position") && transform_curve_["Position"][0].count(i) && transform_curve_["Position"][1].count(i)) {
       auto offset_x = transform_curve_["Position"][0][i];
       auto offset_y = transform_curve_["Position"][1][i];
-      trans = glm::translate(trans, glm::vec3(offset_x, offset_y, 0));
+      trans = glm::translate(trans, glm::vec3(offset_x, -offset_y, 0));
     }
 
     if (transform_curve_.count("Rotation") && transform_curve_["Rotation"][0].count(i)) {
