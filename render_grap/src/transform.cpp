@@ -71,6 +71,7 @@ glm::vec3 Transform::GetShapeGrapOffset(){
   return std::get<t_Vector>(property_values_["Position"]) - std::get<t_Vector>(property_values_["Anchor Point"]);
 }
 
+//note:not support anchor position's keyframe,can conver to position's keyframe
 void Transform::readKeyframeandProperty(const std::string& propname, const nlohmann::json& transform) {
   if (propname != "Anchor Point" && propname != "Position" && propname != "Scale" && propname != "Rotation" && propname != "Opacity") return;
   bool keyvalue_is_vector = IsVectorProperty(propname);
@@ -155,18 +156,24 @@ void Transform::readKeyframeandProperty(const std::string& propname, const nlohm
 }
 
 void Transform::GenerateTransformMat() {
+  //auto anchor_pos = std::get<t_Vector>(property_values_["Anchor Point"]);
+  auto reslution = glm::vec3(JsonDataManager::GetIns().GetWidth(), JsonDataManager::GetIns().GetHeight(), 0);
+  auto position = std::get<t_Vector>(property_values_["Position"]) / reslution - glm::vec3(0.5,0.5,0);
   auto frame_lenth = transform_mat_.clip_end - transform_mat_.clip_start + 1;
   for (auto i = 0; i < frame_lenth; i++) {
     glm::mat4 trans = glm::mat4(1.0f);
     if (transform_curve_.count("Position") && transform_curve_["Position"][0].count(i) && transform_curve_["Position"][1].count(i)) {
       auto offset_x = transform_curve_["Position"][0][i];
       auto offset_y = transform_curve_["Position"][1][i];
-      trans = glm::translate(trans, glm::vec3(offset_x, -offset_y, 0));
+      trans = glm::translate(trans, glm::vec3(offset_x, offset_y, 0));
     }
 
     if (transform_curve_.count("Rotation") && transform_curve_["Rotation"][0].count(i)) {
       auto rot = transform_curve_["Rotation"][0][i];
-      trans = glm::rotate(trans, glm::radians(rot), glm::vec3(0.0, 0.0, 1.0));
+      auto t1 = glm::translate(glm::mat4(1), -glm::vec3(position.x, position.y, 0));
+      auto r = glm::rotate(glm::mat4(1), glm::radians(-rot), glm::vec3(0, 0, 1.0));
+      auto t2 = glm::translate(glm::mat4(1), glm::vec3(position.x, position.y, 0));
+      //trans = trans * t1 * r * t2;
     }
 
     if (transform_curve_.count("Scale") && transform_curve_["Scale"][0].count(i) && transform_curve_["Scale"][1].count(i)) {

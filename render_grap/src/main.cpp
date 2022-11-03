@@ -143,6 +143,7 @@ int main()
         auto layer_data = contents[i]->GetLayerData();
         if (layer_data.start_pos  > static_cast<float>(played) || layer_data.end_pos < static_cast<float>(played)) continue;
         glm::mat4 trans_mat = layer_data.trans[played];
+        //glm::mat4 trans_mat = glm::mat4(1.0f);
         shader.setMat4("transform", trans_mat);
         for (auto j = 0; j < layer_data.paths_num; j++) {
           shader.setVec4("color", layer_data.color[j]);
