@@ -173,7 +173,7 @@ void Transform::GenerateTransformMat() {
       auto t1 = glm::translate(glm::mat4(1), -glm::vec3(position.x, position.y, 0));
       auto r = glm::rotate(glm::mat4(1), glm::radians(-rot), glm::vec3(0, 0, 1.0));
       auto t2 = glm::translate(glm::mat4(1), glm::vec3(position.x, position.y, 0));
-      //trans = trans * t1 * r * t2;
+      trans = trans * t2 * r * t1;
     }
 
     if (transform_curve_.count("Scale") && transform_curve_["Scale"][0].count(i) && transform_curve_["Scale"][1].count(i)) {
