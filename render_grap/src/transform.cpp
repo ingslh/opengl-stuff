@@ -16,7 +16,8 @@ Transform::Transform(const nlohmann::json& transform, bool IsShapeTransform){
   for (auto it = keyframe_data_.begin(); it != keyframe_data_.end(); it++) {
     if (IsVectorProperty(it->first)) {
       auto vector_keyframes = std::get<0>(it->second);
-      auto start_value = vector_keyframes[0].lastkeyValue;
+      //auto start_value = it->first == "Scale" ? glm::vec2(100,100): vector_keyframes[0].lastkeyValue;
+      auto start_value =  vector_keyframes[0].lastkeyValue;
       auto start = vector_keyframes.front().lastkeyTime;
       std::vector<std::map<unsigned int, float>> double_curve_line;
       double_curve_line.resize(2);
@@ -43,7 +44,8 @@ Transform::Transform(const nlohmann::json& transform, bool IsShapeTransform){
     }
     else {
       auto scalar_keyframes = std::get<1>(it->second);
-      auto start_value = scalar_keyframes[0].lastkeyValue;
+      auto start_value = it->first == "Rotation" ? 0.0 : scalar_keyframes[0].lastkeyValue;
+      //auto start_value = scalar_keyframes[0].lastkeyValue;
       unsigned int start = static_cast<unsigned int>(scalar_keyframes.front().lastkeyTime);
       std::vector<std::map<unsigned int, float>> signal_curve_line;
 
@@ -156,30 +158,51 @@ void Transform::readKeyframeandProperty(const std::string& propname, const nlohm
 }
 
 void Transform::GenerateTransformMat() {
-  //auto anchor_pos = std::get<t_Vector>(property_values_["Anchor Point"]);
   auto reslution = glm::vec3(JsonDataManager::GetIns().GetWidth(), JsonDataManager::GetIns().GetHeight(), 0);
   auto position = std::get<t_Vector>(property_values_["Position"]) / reslution - glm::vec3(0.5,0.5,0);
   auto frame_lenth = transform_mat_.clip_end - transform_mat_.clip_start + 1;
-  for (auto i = 0; i < frame_lenth; i++) {
+  for (unsigned int i = 0; i < frame_lenth; i++) {
     glm::mat4 trans = glm::mat4(1.0f);
-    if (transform_curve_.count("Position") && transform_curve_["Position"][0].count(i) && transform_curve_["Position"][1].count(i)) {
-      auto offset_x = transform_curve_["Position"][0][i];
-      auto offset_y = transform_curve_["Position"][1][i];
-      trans = glm::translate(trans, glm::vec3(offset_x, offset_y, 0));
+    if (transform_curve_.count("Position")) {
+      std::vector<float> offset;
+      offset.resize(2);
+      for (auto j = 0; j < offset.size(); j++) {
+        if(i < transform_curve_["Position"][j].begin()->first)
+          offset[j] = transform_curve_["Position"][j].begin()->second;
+        else if( i > transform_curve_["Position"][j].rbegin()->first)
+          offset[j] = transform_curve_["Position"][j].rbegin()->second;
+        else
+          offset[j] = transform_curve_["Position"][j][i];
+      }
+      trans = glm::translate(trans, glm::vec3(offset.front()/reslution.x, offset.back()/reslution.y, 0));
     }
 
-    if (transform_curve_.count("Rotation") && transform_curve_["Rotation"][0].count(i)) {
-      auto rot = transform_curve_["Rotation"][0][i];
+    if (transform_curve_.count("Rotation")) {
+      float rot;
+      if (i < transform_curve_["Rotation"].front().begin()->first)
+        rot = transform_curve_["Rotation"].front().begin()->second;
+      else if(i > transform_curve_["Rotation"].front().rbegin()->first)
+        rot = transform_curve_["Rotation"].front().rbegin()->second;
+      else
+        rot = transform_curve_["Rotation"].front()[i];
       auto t1 = glm::translate(glm::mat4(1), -glm::vec3(position.x, position.y, 0));
-      auto r = glm::rotate(glm::mat4(1), glm::radians(-rot), glm::vec3(0, 0, 1.0));
+      auto r = glm::rotate(glm::mat4(1), glm::radians(-rot), glm::vec3(0, 0, 1.0));//ae use left-hand CS ,but opengl us right-hand CS(coordinate system)
       auto t2 = glm::translate(glm::mat4(1), glm::vec3(position.x, position.y, 0));
       trans = trans * t2 * r * t1;
     }
 
-    if (transform_curve_.count("Scale") && transform_curve_["Scale"][0].count(i) && transform_curve_["Scale"][1].count(i)) {
-      auto scale_x = transform_curve_["Scale"][0][i];
-      auto scale_y = transform_curve_["Scale"][1][i];
-      trans = glm::scale(trans, glm::vec3(scale_x / 100, scale_y / 100, 1.0));
+    if (transform_curve_.count("Scale")) {
+      std::vector<float> scale;
+      scale.resize(2);
+      for (auto j = 0; j < scale.size(); j++) {
+        if (i < transform_curve_["Scale"][j].begin()->first)
+          scale[j] = transform_curve_["Scale"][j].begin()->second;
+        else if (i > transform_curve_["Scale"][j].rbegin()->first)
+          scale[j] = transform_curve_["Scale"][j].rbegin()->second;
+        else
+          scale[j] = transform_curve_["Scale"][j][i];
+      }
+      trans = glm::scale(trans, glm::vec3(scale.front() / 100, scale.back() / 100, 1.0));
     }
     transform_mat_.trans.emplace_back(trans);
   }
