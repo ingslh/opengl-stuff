@@ -9,7 +9,6 @@ project(render_grap)
 set(CMAKE_CXX_STANDARD 17)
 
 set(RENDER_GRAP
-	src/glad.c
 	src/earcut.hpp
 	src/json_data_manager.cpp
 	src/json_data_manager.h
@@ -95,6 +94,9 @@ set(INCLUDE_DIRECTORIES
 set(LIBS_DIRECTORIES
 	${CMAKE_SOURCE_DIR}/../lib
 )
+
+add_library(GLAD ${CMAKE_SOURCE_DIR}/../includes/glad/glad.c)
+
 if(WIN32)
 	link_directories(${LIBS_DIRECTORIES})
 else()	
@@ -118,9 +120,9 @@ else()
 endif()
 
 if(WIN32)
-	target_link_libraries(${PROJECT_NAME} glfw3)
+	target_link_libraries(${PROJECT_NAME} glfw3 GLAD)
 else()
-	target_link_libraries(${PROJECT_NAME} GLFW)
+	target_link_libraries(${PROJECT_NAME} GLFW GLAD)
 endif()
 
 
